@@ -1,5 +1,13 @@
 # Fire Allowance Tracker — Schema Architecture
 
+> **Scope notice (WORK-164, 2026-10-01):** the verified current database state of
+> PROD and DEV (table inventory, migration state, divergence, security posture) is
+> maintained in [`architecture/CURRENT_MODEL.md`](architecture/CURRENT_MODEL.md), and
+> the approved target in [`architecture/PROJECTED_MODEL.md`](architecture/PROJECTED_MODEL.md).
+> Where this file's inventory or PROD statements disagree, those files win. This file
+> remains the reference for `fat` schema ownership rules and the privilege-hardening
+> sections below; full reconciliation is owned by WORK-185.
+
 > Authoritative reference for FAT's PostgreSQL surface in Supabase.
 > Every FAT-owned table, function, RPC, trigger and policy lives in the
 > `fat` schema. Only Supabase auth and other apps' shared resources remain
