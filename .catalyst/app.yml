@@ -61,11 +61,13 @@ linear:
   app_label: Fire Allowance Tracker
 
 chatgpt:
-  # Declares this app's existing ChatGPT Project identity (WORK-110, formerly
-  # APP-110). governance_mode is deliberately omitted: its absence resolves as
-  # LEGACY until WORK-110 completes the LIVE migration.
+  # Declares this app's ChatGPT Project identity. governance_mode: LIVE was
+  # earned by WORK-110 (formerly APP-110) after the CORE_RULES §20.9.1 migration
+  # checklist passed: the seven shared governance Project Sources are retired as
+  # authority, and every governed dispatch must resolve a current live snapshot.
   project: Fire Allowance Tracker
   eligible: true
+  governance_mode: LIVE
 
 instructions:
   agent: CLAUDE.md
