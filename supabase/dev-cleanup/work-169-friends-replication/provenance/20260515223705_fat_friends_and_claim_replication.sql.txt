@@ -1,0 +1,563 @@
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+-- FAT — Friend system + claim-draft replication (additive)
+--
+-- Adds:
+--   - fat.friend_requests
+--   - fat.friendships  (bidirectional: two rows per pair)
+--   - fat.claim_replication_events  (audit-only, no live-sync logic depends on it)
+--
+-- Plus SECURITY DEFINER RPCs:
+--   - fat.search_user_by_email(text)         → finds a user by exact email
+--   - fat.send_friend_request(uuid)          → creates a pending request
+--   - fat.accept_friend_request(uuid)        → creates bidirectional friendship
+--   - fat.reject_friend_request(uuid)
+--   - fat.cancel_friend_request(uuid)
+--   - fat.remove_friend(uuid)
+--   - fat.replicate_claim_to_friends(text, uuid, uuid[]) → independent draft copies
+--   - fat.mark_replication_events_seen(uuid[])
+--
+-- All replication produces *independent* claim rows owned by the recipient.
+-- Source and replica share NO mutable state. Audit table is observational only.
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+
+-- ─── friend_requests ──────────────────────────────────────────────────────────
+
+create table if not exists fat.friend_requests (
+  id                 uuid primary key default gen_random_uuid(),
+  sender_user_id     uuid not null references auth.users(id) on delete cascade,
+  recipient_user_id  uuid not null references auth.users(id) on delete cascade,
+  status             text not null default 'pending'
+                       check (status in ('pending','accepted','rejected','cancelled')),
+  created_at         timestamptz not null default now(),
+  responded_at       timestamptz,
+  constraint friend_requests_no_self check (sender_user_id <> recipient_user_id)
+);
+
+-- Only one *pending* request per ordered pair (re-requests allowed after closure)
+create unique index if not exists friend_requests_pending_unique
+  on fat.friend_requests (sender_user_id, recipient_user_id)
+  where status = 'pending';
+
+create index if not exists friend_requests_recipient_idx
+  on fat.friend_requests (recipient_user_id, status);
+create index if not exists friend_requests_sender_idx
+  on fat.friend_requests (sender_user_id, status);
+
+
+-- ─── friendships (bidirectional) ──────────────────────────────────────────────
+
+create table if not exists fat.friendships (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid not null references auth.users(id) on delete cascade,
+  friend_user_id  uuid not null references auth.users(id) on delete cascade,
+  created_at      timestamptz not null default now(),
+  constraint friendships_no_self check (user_id <> friend_user_id),
+  unique (user_id, friend_user_id)
+);
+
+create index if not exists friendships_user_idx
+  on fat.friendships (user_id);
+
+
+-- ─── claim_replication_events (audit only) ────────────────────────────────────
+-- Records every successful draft replication. NEVER referenced for live syncing.
+-- "seen_at" lets the recipient dismiss the incoming-draft banner.
+
+create table if not exists fat.claim_replication_events (
+  id                    uuid primary key default gen_random_uuid(),
+  source_claim_table    text not null
+                         check (source_claim_table in ('recalls','retain','standby','spoilt_meals')),
+  source_claim_id       uuid not null,
+  source_user_id        uuid not null references auth.users(id) on delete cascade,
+  recipient_user_id     uuid not null references auth.users(id) on delete cascade,
+  replicated_claim_id   uuid not null,
+  replicated_claim_table text not null,
+  claim_type            text not null,
+  created_at            timestamptz not null default now(),
+  seen_at               timestamptz
+);
+
+create index if not exists replication_events_recipient_idx
+  on fat.claim_replication_events (recipient_user_id, seen_at, created_at desc);
+create index if not exists replication_events_source_idx
+  on fat.claim_replication_events (source_user_id, created_at desc);
+
+
+-- ─── RLS ──────────────────────────────────────────────────────────────────────
+
+alter table fat.friend_requests          enable row level security;
+alter table fat.friendships              enable row level security;
+alter table fat.claim_replication_events enable row level security;
+
+-- Users see requests they sent OR received; only RPCs mutate.
+drop policy if exists requests_select_own on fat.friend_requests;
+create policy requests_select_own on fat.friend_requests
+  for select using (auth.uid() = sender_user_id or auth.uid() = recipient_user_id);
+
+-- No direct INSERT/UPDATE/DELETE for clients — all mutations go through RPCs.
+
+-- Friendships: user sees only their own rows.
+drop policy if exists friendships_select_own on fat.friendships;
+create policy friendships_select_own on fat.friendships
+  for select using (auth.uid() = user_id);
+
+-- Replication events: user sees events involving them (as sender or recipient).
+drop policy if exists replication_events_select_own on fat.claim_replication_events;
+create policy replication_events_select_own on fat.claim_replication_events
+  for select using (auth.uid() = source_user_id or auth.uid() = recipient_user_id);
+
+
+-- ─── helper: email lookup ─────────────────────────────────────────────────────
+
+create or replace function fat.search_user_by_email(p_email text)
+returns table (user_id uuid, display_name text, email text)
+language plpgsql
+security definer
+set search_path = public, fat, auth, pg_temp
+as $$
+declare
+  v_email text := lower(trim(coalesce(p_email,'')));
+begin
+  if v_email = '' or auth.uid() is null then
+    return;
+  end if;
+
+  return query
+  select u.id::uuid as user_id,
+         coalesce(p.first_name || ' ' || p.last_name, p.display_name, u.email)::text as display_name,
+         u.email::text as email
+  from auth.users u
+  left join public.profiles p on p.id = u.id
+  where lower(u.email) = v_email
+    and u.id <> auth.uid()
+  limit 1;
+end;
+$$;
+
+revoke all on function fat.search_user_by_email(text) from public, anon;
+grant execute on function fat.search_user_by_email(text) to authenticated;
+
+
+-- ─── friend-request flow ──────────────────────────────────────────────────────
+
+create or replace function fat.send_friend_request(p_recipient_user_id uuid)
+returns fat.friend_requests
+language plpgsql
+security definer
+set search_path = fat, auth, pg_temp
+as $$
+declare
+  v_sender uuid := auth.uid();
+  v_existing fat.friend_requests;
+  v_friend_count int;
+  v_row fat.friend_requests;
+begin
+  if v_sender is null then
+    raise exception 'Not authenticated' using errcode = '28000';
+  end if;
+  if p_recipient_user_id is null or p_recipient_user_id = v_sender then
+    raise exception 'Invalid recipient';
+  end if;
+
+  -- Already friends?
+  select count(*) into v_friend_count
+  from fat.friendships
+  where user_id = v_sender and friend_user_id = p_recipient_user_id;
+  if v_friend_count > 0 then
+    raise exception 'Already friends';
+  end if;
+
+  -- Existing pending request in either direction?
+  select * into v_existing from fat.friend_requests
+  where status = 'pending'
+    and ((sender_user_id = v_sender    and recipient_user_id = p_recipient_user_id)
+      or (sender_user_id = p_recipient_user_id and recipient_user_id = v_sender))
+  limit 1;
+  if v_existing.id is not null then
+    raise exception 'A pending request already exists between these users';
+  end if;
+
+  insert into fat.friend_requests (sender_user_id, recipient_user_id, status)
+  values (v_sender, p_recipient_user_id, 'pending')
+  returning * into v_row;
+
+  return v_row;
+end;
+$$;
+
+revoke all on function fat.send_friend_request(uuid) from public, anon;
+grant execute on function fat.send_friend_request(uuid) to authenticated;
+
+
+create or replace function fat.accept_friend_request(p_request_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = fat, auth, pg_temp
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_req fat.friend_requests;
+begin
+  if v_uid is null then
+    raise exception 'Not authenticated' using errcode = '28000';
+  end if;
+
+  select * into v_req from fat.friend_requests
+  where id = p_request_id and recipient_user_id = v_uid and status = 'pending'
+  for update;
+  if v_req.id is null then
+    raise exception 'Request not found or not pending';
+  end if;
+
+  update fat.friend_requests
+     set status = 'accepted', responded_at = now()
+   where id = v_req.id;
+
+  -- Bidirectional rows. ON CONFLICT DO NOTHING in case of races / re-accepts.
+  insert into fat.friendships (user_id, friend_user_id)
+    values (v_req.sender_user_id, v_req.recipient_user_id)
+    on conflict (user_id, friend_user_id) do nothing;
+  insert into fat.friendships (user_id, friend_user_id)
+    values (v_req.recipient_user_id, v_req.sender_user_id)
+    on conflict (user_id, friend_user_id) do nothing;
+end;
+$$;
+
+revoke all on function fat.accept_friend_request(uuid) from public, anon;
+grant execute on function fat.accept_friend_request(uuid) to authenticated;
+
+
+create or replace function fat.reject_friend_request(p_request_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = fat, auth, pg_temp
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if v_uid is null then
+    raise exception 'Not authenticated' using errcode = '28000';
+  end if;
+
+  update fat.friend_requests
+     set status = 'rejected', responded_at = now()
+   where id = p_request_id and recipient_user_id = v_uid and status = 'pending';
+
+  if not found then
+    raise exception 'Request not found or not pending';
+  end if;
+end;
+$$;
+
+revoke all on function fat.reject_friend_request(uuid) from public, anon;
+grant execute on function fat.reject_friend_request(uuid) to authenticated;
+
+
+create or replace function fat.cancel_friend_request(p_request_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = fat, auth, pg_temp
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if v_uid is null then
+    raise exception 'Not authenticated' using errcode = '28000';
+  end if;
+
+  update fat.friend_requests
+     set status = 'cancelled', responded_at = now()
+   where id = p_request_id and sender_user_id = v_uid and status = 'pending';
+
+  if not found then
+    raise exception 'Request not found or not pending';
+  end if;
+end;
+$$;
+
+revoke all on function fat.cancel_friend_request(uuid) from public, anon;
+grant execute on function fat.cancel_friend_request(uuid) to authenticated;
+
+
+create or replace function fat.remove_friend(p_friend_user_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = fat, auth, pg_temp
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if v_uid is null then
+    raise exception 'Not authenticated' using errcode = '28000';
+  end if;
+
+  delete from fat.friendships
+   where (user_id = v_uid           and friend_user_id = p_friend_user_id)
+      or (user_id = p_friend_user_id and friend_user_id = v_uid);
+end;
+$$;
+
+revoke all on function fat.remove_friend(uuid) from public, anon;
+grant execute on function fat.remove_friend(uuid) to authenticated;
+
+
+-- ─── list_friends_with_profile (helper) ───────────────────────────────────────
+
+create or replace function fat.list_friends_with_profile()
+returns table (friend_user_id uuid, display_name text, email text, since timestamptz)
+language plpgsql
+security definer
+set search_path = fat, public, auth, pg_temp
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if v_uid is null then
+    return;
+  end if;
+
+  return query
+  select f.friend_user_id,
+         coalesce(p.first_name || ' ' || p.last_name, p.display_name, u.email)::text as display_name,
+         u.email::text,
+         f.created_at as since
+  from fat.friendships f
+  join auth.users u on u.id = f.friend_user_id
+  left join public.profiles p on p.id = f.friend_user_id
+  where f.user_id = v_uid
+  order by display_name asc;
+end;
+$$;
+
+revoke all on function fat.list_friends_with_profile() from public, anon;
+grant execute on function fat.list_friends_with_profile() to authenticated;
+
+
+create or replace function fat.list_friend_requests_with_profile()
+returns table (
+  request_id     uuid,
+  direction      text,
+  other_user_id  uuid,
+  display_name   text,
+  email          text,
+  status         text,
+  created_at     timestamptz
+)
+language plpgsql
+security definer
+set search_path = fat, public, auth, pg_temp
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if v_uid is null then
+    return;
+  end if;
+
+  return query
+  select r.id,
+         case when r.sender_user_id = v_uid then 'outgoing' else 'incoming' end,
+         case when r.sender_user_id = v_uid then r.recipient_user_id else r.sender_user_id end,
+         coalesce(p.first_name || ' ' || p.last_name, p.display_name, u.email)::text,
+         u.email::text,
+         r.status,
+         r.created_at
+  from fat.friend_requests r
+  join auth.users u on u.id = (case when r.sender_user_id = v_uid then r.recipient_user_id else r.sender_user_id end)
+  left join public.profiles p on p.id = u.id
+  where (r.sender_user_id = v_uid or r.recipient_user_id = v_uid)
+    and r.status = 'pending'
+  order by r.created_at desc;
+end;
+$$;
+
+revoke all on function fat.list_friend_requests_with_profile() from public, anon;
+grant execute on function fat.list_friend_requests_with_profile() to authenticated;
+
+
+-- ─── claim replication ────────────────────────────────────────────────────────
+-- Creates fully INDEPENDENT draft claims owned by each recipient.
+-- Source row is left untouched. Only "safe" operational fields are copied
+-- (date, station context, shift, operational metadata, notes). Money fields,
+-- distance fields, calc snapshots, attachments and approval state are
+-- deliberately NOT copied — recipients re-derive these themselves.
+--
+-- Returns the inserted draft IDs so the client can update the UI.
+
+create or replace function fat.replicate_claim_to_friends(
+  p_source_table   text,
+  p_source_claim_id uuid,
+  p_recipient_ids  uuid[]
+)
+returns table (recipient_user_id uuid, replicated_claim_id uuid)
+language plpgsql
+security definer
+set search_path = fat, auth, pg_temp
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_rid uuid;
+  v_new_id uuid;
+  v_is_friend int;
+  v_src_recalls fat.recalls;
+  v_src_retain  fat.retain;
+  v_src_standby fat.standby;
+  v_src_spoilt  fat.spoilt_meals;
+  v_claim_type  text;
+begin
+  if v_uid is null then
+    raise exception 'Not authenticated' using errcode = '28000';
+  end if;
+  if p_source_table not in ('recalls','retain','standby','spoilt_meals') then
+    raise exception 'Invalid source table';
+  end if;
+  if p_recipient_ids is null or array_length(p_recipient_ids, 1) is null then
+    return;
+  end if;
+
+  -- Verify source claim belongs to the caller. Bound via RLS-bypass here because
+  -- this function is SECURITY DEFINER; we re-enforce ownership manually.
+  if p_source_table = 'recalls' then
+    select * into v_src_recalls from fat.recalls where id = p_source_claim_id;
+    if v_src_recalls.id is null or v_src_recalls.user_id <> v_uid then
+      raise exception 'Source claim not found or not owned by caller';
+    end if;
+    v_claim_type := 'recalls';
+  elsif p_source_table = 'retain' then
+    select * into v_src_retain from fat.retain where id = p_source_claim_id;
+    if v_src_retain.id is null or v_src_retain.user_id <> v_uid then
+      raise exception 'Source claim not found or not owned by caller';
+    end if;
+    v_claim_type := 'retain';
+  elsif p_source_table = 'standby' then
+    select * into v_src_standby from fat.standby where id = p_source_claim_id;
+    if v_src_standby.id is null or v_src_standby.user_id <> v_uid then
+      raise exception 'Source claim not found or not owned by caller';
+    end if;
+    v_claim_type := 'standby';
+  else
+    select * into v_src_spoilt from fat.spoilt_meals where id = p_source_claim_id;
+    if v_src_spoilt.id is null or v_src_spoilt.user_id <> v_uid then
+      raise exception 'Source claim not found or not owned by caller';
+    end if;
+    v_claim_type := 'spoilt_meals';
+  end if;
+
+  foreach v_rid in array p_recipient_ids loop
+    if v_rid = v_uid then
+      continue;  -- skip self
+    end if;
+
+    -- Verify friendship (caller must have v_rid in their friendships)
+    select count(*) into v_is_friend from fat.friendships
+    where user_id = v_uid and friend_user_id = v_rid;
+    if v_is_friend = 0 then
+      continue;  -- silently skip non-friends; no privilege escalation
+    end if;
+
+    v_new_id := gen_random_uuid();
+
+    if p_source_table = 'recalls' then
+      insert into fat.recalls (
+        id, user_id, date,
+        rostered_stn_id, recall_stn_id, rostered_stn_label, recall_stn_label,
+        shift, arrived, notes, incident_number,
+        status,
+        -- Explicitly DO NOT copy: dist_*, *_amount, adjusted_amount, payslip_pay_nbr,
+        -- pay_number, payment_status/date, attachment_url, ocr_source, *_snapshot,
+        -- calculation_inputs, home_address_snap, claim_number, financial_year_id,
+        -- claim_group_id, platoon (recipient's own).
+        created_at, updated_at
+      ) values (
+        v_new_id, v_rid, v_src_recalls.date,
+        v_src_recalls.rostered_stn_id, v_src_recalls.recall_stn_id,
+        v_src_recalls.rostered_stn_label, v_src_recalls.recall_stn_label,
+        v_src_recalls.shift, v_src_recalls.arrived, v_src_recalls.notes, v_src_recalls.incident_number,
+        'Pending',
+        now(), now()
+      );
+    elsif p_source_table = 'retain' then
+      insert into fat.retain (
+        id, user_id, date,
+        station_id, shift, booked_off_time, rmss_number, is_firecall,
+        status, created_at, updated_at
+      ) values (
+        v_new_id, v_rid, v_src_retain.date,
+        v_src_retain.station_id, v_src_retain.shift, v_src_retain.booked_off_time,
+        v_src_retain.rmss_number, v_src_retain.is_firecall,
+        'Pending', now(), now()
+      );
+    elsif p_source_table = 'standby' then
+      insert into fat.standby (
+        id, user_id, date,
+        standby_type, rostered_stn_id, standby_stn_id, shift,
+        arrived, arrived_time, notes,
+        status, created_at, updated_at
+      ) values (
+        v_new_id, v_rid, v_src_standby.date,
+        v_src_standby.standby_type, v_src_standby.rostered_stn_id, v_src_standby.standby_stn_id,
+        v_src_standby.shift, v_src_standby.arrived, v_src_standby.arrived_time, v_src_standby.notes,
+        'Pending', now(), now()
+      );
+    else  -- spoilt_meals
+      insert into fat.spoilt_meals (
+        id, user_id, date,
+        meal_type, station_id, claim_stn_id, shift,
+        call_time, call_number, incident_time, meal_interrupted, return_to_stn, claim_date,
+        status, created_at, updated_at
+      ) values (
+        v_new_id, v_rid, v_src_spoilt.date,
+        v_src_spoilt.meal_type, v_src_spoilt.station_id, v_src_spoilt.claim_stn_id, v_src_spoilt.shift,
+        v_src_spoilt.call_time, v_src_spoilt.call_number, v_src_spoilt.incident_time,
+        v_src_spoilt.meal_interrupted, v_src_spoilt.return_to_stn, v_src_spoilt.claim_date,
+        'Pending', now(), now()
+      );
+    end if;
+
+    insert into fat.claim_replication_events (
+      source_claim_table, source_claim_id, source_user_id,
+      recipient_user_id, replicated_claim_id, replicated_claim_table, claim_type
+    ) values (
+      p_source_table, p_source_claim_id, v_uid,
+      v_rid, v_new_id, p_source_table, v_claim_type
+    );
+
+    recipient_user_id := v_rid;
+    replicated_claim_id := v_new_id;
+    return next;
+  end loop;
+end;
+$$;
+
+revoke all on function fat.replicate_claim_to_friends(text, uuid, uuid[]) from public, anon;
+grant execute on function fat.replicate_claim_to_friends(text, uuid, uuid[]) to authenticated;
+
+
+create or replace function fat.mark_replication_events_seen(p_event_ids uuid[])
+returns void
+language plpgsql
+security definer
+set search_path = fat, auth, pg_temp
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if v_uid is null then
+    return;
+  end if;
+  update fat.claim_replication_events
+     set seen_at = now()
+   where id = any(p_event_ids)
+     and recipient_user_id = v_uid
+     and seen_at is null;
+end;
+$$;
+
+revoke all on function fat.mark_replication_events_seen(uuid[]) from public, anon;
+grant execute on function fat.mark_replication_events_seen(uuid[]) to authenticated;
