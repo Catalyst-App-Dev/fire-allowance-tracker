@@ -38,7 +38,7 @@ Provenance keys: **E1** = WORK-164 comment `e848ae43` (Current evidence), **E2**
 | G11 | Code constants + per-user `user_rates`; retain constant truncated → global versioned rate/rule model, full precision, audited per-claim override | APG | data / architecture | Med | [WORK-172](https://linear.app/catalyst-app-development/issue/WORK-172) (Backlog) | Later | Yes (rate values / effective dates) | E1, D4/D9e |
 | G12 | Fake $0 Recall Excess Travel child → none; real entitlement only under a verified rule | SEC/DEF | product | Low | [WORK-174](https://linear.app/catalyst-app-development/issue/WORK-174) (Backlog); rule part in WORK-173 | Later (runtime promotion) | No | E1, D9d |
 | G13 | SB/M&D excess travel ungated → evidence-derived rule, fail closed | EVID | product | Med | [WORK-170](https://linear.app/catalyst-app-development/issue/WORK-170) (Backlog); implementation in WORK-173 | No | **Yes — exact rule unknown** | E2, D3 |
-| G14 | DEV friends/replication layer (untracked, cross-user risk) → removed | SEC/DEF | security | High | [WORK-169](https://linear.app/catalyst-app-development/issue/WORK-169) (Backlog) | No (DEV) | No | E1, D5 |
+| G14 | ~~DEV friends/replication layer (untracked, cross-user risk) → removed~~ **Closed 2026-10-01:** removed from DEV (ledger `20261001232645`); never present in PROD | SEC/DEF | security | — | [WORK-169](https://linear.app/catalyst-app-development/issue/WORK-169) (completed) | No (DEV only; nothing to promote) | No | E1, D5 |
 | G15 | Payments dark; reconciliation sees SB/MD only → enabled only after prerequisites | APG | product | High if early | [WORK-175](https://linear.app/catalyst-app-development/issue/WORK-175) (Backlog, blocked by WORK-165, WORK-166) | Yes | Operator go decision | E1, D6 |
 | G16 | OCR dark, PII/retention unresolved → policy first; OCR off outside DEV until approved | EVID | product / security | Med | [WORK-176](https://linear.app/catalyst-app-development/issue/WORK-176) (Backlog) | Yes (to enable) | **Yes** | E1, D7 |
 | G17a | No user-data export → full CSV/JSON export | FUT | product | Low | [WORK-177](https://linear.app/catalyst-app-development/issue/WORK-177) (Backlog) | Later | No | A (D8) |
@@ -63,7 +63,7 @@ Provenance keys: **E1** = WORK-164 comment `e848ae43` (Current evidence), **E2**
 
 ```
 Tier 0 — independent, can start now
-  WORK-169 (G14)  WORK-180 (G18)  WORK-181 (G19)  WORK-182 (G21)  WORK-183 (G23)
+  WORK-169 (G14, done)  WORK-180 (G18)  WORK-181 (G19)  WORK-182 (G21)  WORK-183 (G23)
   WORK-184 (G24)  WORK-185 (G20)  WORK-187 (G26)  WORK-174 (G12)
   WORK-170 (G13 evidence)  WORK-176 (G16 policy)
   WORK-177 / 178 / 179 (G17 — do not depend on Phase 3; must respect isolation)
