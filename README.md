@@ -2,6 +2,14 @@
 
 A mobile-first web app for tracking fire allowance claims across Recalls, Retain, Standby/M&D, and Spoilt/Delayed meals. Built with Next.js 15 and Supabase.
 
+> **Architecture authority:** what FAT is now, what it has been approved to become,
+> and every owned difference between the two live in
+> [`docs/architecture/`](docs/architecture/) —
+> [Current Model](docs/architecture/CURRENT_MODEL.md),
+> [Projected Model](docs/architecture/PROJECTED_MODEL.md) and
+> [Gap Register](docs/architecture/GAP_REGISTER.md). Where any other document
+> disagrees about current behaviour or intended architecture, those files win.
+
 ---
 
 ## Quick setup (estimated time: 20 minutes)
