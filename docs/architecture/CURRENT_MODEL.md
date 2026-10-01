@@ -45,7 +45,7 @@ Code references below are paths on `origin/dev` at `62f52b2`.
   main 0f80f5b == dev 62f52b2      wgcqzamuspuqpedqasbc         kctctvpobbizhkiqkgqw
   (identical app code)             canonical 01–14 only         canonical 01–22 + hardening
   Vercel PROD = main@0f80f5b       unhardened privileges        hardened privileges
-  Vercel preview = dev@62f52b2     legacy schemas present       untracked friends layer
+  Vercel preview = dev@62f52b2     legacy schemas present       friends layer removed
 ```
 
 They are **not** one deployment. The same code runs against two materially different
@@ -204,7 +204,7 @@ functions, RLS on every table.**
 
 ## Current DEV database
 
-Supabase `kctctvpobbizhkiqkgqw` (shared multi-app). Schema `fat`: **37 tables, 26
+Supabase `kctctvpobbizhkiqkgqw` (shared multi-app). Schema `fat`: **34 tables, 16
 functions, RLS on every table.**
 
 - Canonical 01–22 applied (`canonical_*`, `fat_*_15…18`, `user_feature_flags`,
@@ -212,9 +212,10 @@ functions, RLS on every table.**
   event trigger `fat_enforce_no_public_execute`.
 - Data (counts): auth.users 2, `operational_claims` 4, `claim_entitlements` 9,
   `reconciliation_audit` 4, prototype claim tables mostly empty.
-- **Untracked friends/replication layer** (ledger `20260515223705`, no repo SQL, no app
-  code): `fat.friend_requests`, `fat.friendships`, `fat.claim_replication_events`
-  (0 rows) and 10 SECURITY DEFINER functions.
+- **Friends/replication layer removed** (WORK-169): the untracked layer from ledger
+  `20260515223705` (3 empty tables, 10 SECURITY DEFINER functions, no app code) was
+  dropped by ledger `20261001232645 work169_drop_fat_friends_replication_v1`. Package and
+  verbatim provenance: `supabase/dev-cleanup/work-169-friends-replication/`.
 
 ## PROD vs DEV divergence
 
@@ -225,10 +226,11 @@ functions, RLS on every table.**
 | Integrity locks 15–18 | absent | present |
 | Default privileges | anon ALL on future objects | none (hardened) |
 | No-PUBLIC-execute trigger | absent (`ensure_rls` instead) | present |
-| Friends/replication | absent | present (untracked) |
+| Friends/replication | absent | absent (removed, WORK-169) |
 | Legacy `fire_allowance_tracker` / `public.fat_*` | present | removed |
 
-A blind DEV → PROD schema copy is **unsafe** (it would carry the friends layer).
+A blind DEV → PROD schema copy is **unsafe** (the remaining divergences above are not
+promotable as-is).
 
 ## Current security posture
 
@@ -240,8 +242,6 @@ A blind DEV → PROD schema copy is **unsafe** (it would carry the friends layer
   PUBLIC-executable.
 - PROD legacy `fire_allowance_tracker`: full anon/authenticated grants, no schema USAGE
   (latent). PostgREST exposed-schema list unverified (WORK-144).
-- DEV friends layer: `search_user_by_email` (email → user id/name across the shared auth
-  pool) and `replicate_claim_to_friends` (writes claims into another user's ledger).
 - Leaked-password protection off (both projects).
 - `.claude/settings.local.json` committed with a private Google Sheet URL.
 
