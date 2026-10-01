@@ -47,7 +47,13 @@
 --
 -- FAIL CLOSED ON DATA
 -- Guard 2 aborts if any of the three tables holds a row. Nothing is discarded
--- silently; a non-empty table needs a separate decision.
+-- silently; a non-empty table needs a separate decision. Before that check the
+-- three tables are locked ACCESS EXCLUSIVE (the mode DROP TABLE itself needs, so
+-- there is no later lock upgrade), so no concurrent INSERT/UPDATE/DELETE, for
+-- example via a still-live SECURITY DEFINER function, can land between the
+-- emptiness check and the drops. The locks are held until COMMIT/ROLLBACK.
+-- lock_timeout makes a blocked lock attempt abort rather than queue
+-- indefinitely.
 --
 -- Every guard RAISEs EXCEPTION, which rolls the whole migration back.
 -- ═══════════════════════════════════════════════════════════════════════════════
@@ -94,7 +100,16 @@ END
 $guard$;
 
 
--- ─── GUARD 2 — every table is empty ──────────────────────────────────────────
+-- ─── LOCK — block every writer before the emptiness check ────────────────────
+-- Guard 1 has proved all three tables exist. One LOCK statement takes them in a
+-- fixed order; ACCESS EXCLUSIVE conflicts with every other lock mode, so no row
+-- can be written (or read) until this transaction ends.
+SET LOCAL lock_timeout = '10s';
+LOCK TABLE fat.friend_requests, fat.friendships, fat.claim_replication_events
+  IN ACCESS EXCLUSIVE MODE;
+
+
+-- ─── GUARD 2 — every table is empty (checked under the lock above) ───────────
 DO $empty$
 DECLARE
   v_fr  bigint;
