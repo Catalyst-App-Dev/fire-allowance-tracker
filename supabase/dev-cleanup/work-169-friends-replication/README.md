@@ -34,7 +34,7 @@ user's ledger through a SECURITY DEFINER path, bypassing per-user isolation.
 |---|------|------|-------|
 | 0 | `00_preflight_inspect.sql` | read-only | Inventory, row counts, dependencies, ledger provenance. On PROD it is the non-presence proof. |
 | 1 | `01_drop_friends_replication.sql` | **DDL — destructive** | The migration. md5 `8d81f1a5d2fcd733a405d430173883b7`. |
-| 1a | `01a_sql_editor_apply_with_ledger.sql` | DDL + ledger insert | Generated from `01`: runs it verbatim and records it in `supabase_migrations.schema_migrations` in one transaction. Used because the Supabase connector's `apply_migration` timed out four times without reaching Postgres. |
+| 1a | `01a_sql_editor_apply_with_ledger.sql` | DDL + ledger insert | Generated from `01`: runs it verbatim and records it in `supabase_migrations.schema_migrations` in one transaction. Prepared as a SQL Editor fallback after Claude's Supabase connector `apply_migration` timed out four times without reaching Postgres; **not used** for the actual apply (see below). |
 | 2 | `02_validate.sql` | read-only | Seven post-checks; all pass on DEV. |
 | — | `provenance/20260515223705_fat_friends_and_claim_replication.sql.txt` | **non-executable** | Byte-exact copy of the original ledger statement (md5 `ea4991186cb5734a27a51f851edb9b0a`; the 10 live function bodies matched it). Kept as `.txt` so no tool applies it; it must never be re-run. |
 
@@ -56,11 +56,14 @@ There is no recover script: restoring the unsafe layer is not a supported outcom
 
 ## Applied (DEV)
 
-- Ledger: `20261001232645 work169_drop_fat_friends_replication_v1`, applied by the operator
-  through the SQL Editor with `01a`.
+- Ledger: `20261001232645 work169_drop_fat_friends_replication_v1`. The DEV Postgres log
+  (2026-10-01T23:26:45Z) shows it was applied through the **Supabase migration API**
+  (`apply_migration`, via the operator's ChatGPT Supabase connector), not through `01a`: the
+  logged statement is the API's own wrapper (`begin; -- apply sql from post body … -- track
+  statements in history table … commit;`) around the committed `01`, LOCK included.
 - Recorded `statements[1]` is the committed `01` **without its final trailing newline**
-  (14,563 vs 14,564 chars; `md5(statements[1] || E'\n')` = `8d81f1a5…`). The content is
-  identical. The difference arose in the manual SQL Editor path.
+  (14,563 vs 14,564 chars; `md5(statements[1] || E'\n')` = `8d81f1a5…`). The API trims
+  trailing whitespace; the content is identical.
 - Catalog diff against the pre-removal baseline (feature objects excluded): `fat` 323
   objects, md5 `1a2a05ca4ce15988fe8a296b5632c2c2`; all schemas 2,164 objects, md5
   `d0044e456e8a6852e3e4bf74b5f0295f`. Both are **identical** before and after.
