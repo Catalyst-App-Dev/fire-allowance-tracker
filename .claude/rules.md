@@ -17,10 +17,10 @@ type: project
 this app's identity and routing. Take these from the manifest, never from memory
 or folder names:
 
-- `repository.owner` / `repository.name` — **`Catalyst-App-Dev/fire-allowance-tracker`**
+- `repository` — **`Tinnaz45/fire-allowance-tracker`**
 - `branches.dev` / `branches.production` — **`dev`** / **`main`**
 - `database.schema` — **`fat`**
-- `linear.team` / `linear.app_label` — **Applications** / **Fire Allowance Tracker**
+- `linear.team` / `linear.team_key` / `linear.app_label` — **Workshop** / **`WORK`** / **Fire Allowance Tracker**
 
 If the manifest and reality disagree, **stop and report it** — raise a Linear
 Issue. Do not edit the manifest to match an unverified state, and do not add a
@@ -29,8 +29,8 @@ field you cannot establish from repository evidence.
 ## Strict Rules
 
 - **Every branch is owned by a Linear Issue.** No Issue → no branch → no PR. The
-  Issue lives in the `Applications` team and carries the `Fire Allowance Tracker`
-  app label.
+  Issue lives in the `Workshop` team (key `WORK`) and carries the
+  `Fire Allowance Tracker` app label.
 - **Classify the work first — Problem or Idea.** These are the only two canonical
   primary classifications. A **Problem** is wrong/unexpected/unsafe/unclear
   behaviour needing root cause **before** a fix; an **Idea** is new/different/

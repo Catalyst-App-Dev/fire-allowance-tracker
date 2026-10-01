@@ -14,11 +14,11 @@ schema: catalyst/app@1
 id: fire-allowance-tracker
 name: Fire Allowance Tracker
 
-repository:
-  owner: Tinnaz45
-  name: fire-allowance-tracker
-  url: https://github.com/Tinnaz45/fire-allowance-tracker
-  visibility: public
+# owner/repo exactly as GitHub renders it — the canonical catalyst/app@1 string
+# shape that the governance locator compares by equality (GOV-327). The repository
+# was transferred to Tinnaz45 under APP-116.
+repository: Tinnaz45/fire-allowance-tracker
+repository_visibility: public
 
 # Normal two-branch application: ordinary work lands on `dev` via PR;
 # `main` is production and is reached only by explicitly approved promotion.
@@ -46,21 +46,24 @@ database:
   # The string "fire_allowance_tracker" does not appear anywhere in this
   # repository as a schema reference. The separate `fire_allowance_tracker`
   # schema observed in PROD is not read or written by this application; its
-  # disposition is tracked in Linear GOV-8 and is out of scope here.
+  # disposition is tracked in Linear WORK-144 / WORK-145 (successors to the
+  # deleted GOV-8 / GOV-308 cleanup Issues) and is out of scope here.
   schema: fat
   # DEV and PROD are separate Supabase projects — see CLAUDE.md §7.
   # The `fat` schema must remain exposed to PostgREST.
 
+# GOV-409 renamed the Applications team (key APP) to Workshop (key WORK).
+# Historical APP-<n> identifiers still resolve to the same Issues.
 linear:
-  team: Applications
-  team_key: APP
+  team: Workshop
+  team_key: WORK
   # Applied to every Issue that owns work in this repository.
   app_label: Fire Allowance Tracker
 
 chatgpt:
-  # Declares this app's existing ChatGPT Project identity (APP-110).
-  # governance_mode is deliberately omitted: its absence resolves as LEGACY
-  # until APP-110 post-removal verification passes.
+  # Declares this app's existing ChatGPT Project identity (WORK-110, formerly
+  # APP-110). governance_mode is deliberately omitted: its absence resolves as
+  # LEGACY until WORK-110 completes the LIVE migration.
   project: Fire Allowance Tracker
   eligible: true
 

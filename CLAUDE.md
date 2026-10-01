@@ -32,15 +32,17 @@ manifest:
 
 | Question | Manifest field |
 |----------|----------------|
-| Which repository owns this app? | `repository.owner` / `repository.name` |
+| Which repository owns this app? | `repository` (`owner/repo`) |
 | Which branch is development? | `branches.dev` |
 | Which branch is production? | `branches.production` |
 | Which PostgreSQL schema does the app own? | `database.schema` |
-| Which Linear team and app label route this work? | `linear.team` / `linear.app_label` |
+| Which Linear team and app label route this work? | `linear.team` / `linear.team_key` / `linear.app_label` |
 
-For this repository those resolve to: owner `Catalyst-App-Dev`, dev branch
-`dev`, production branch `main`, database schema **`fat`**, Linear team
-**Applications** (`APP`) with app label **Fire Allowance Tracker**.
+For this repository those resolve to: repository `Tinnaz45/fire-allowance-tracker`,
+dev branch `dev`, production branch `main`, database schema **`fat`**, Linear
+team **Workshop** (`WORK`) with app label **Fire Allowance Tracker**. Workshop
+was formerly the Applications team (`APP`); historical `APP-<n>` identifiers
+still resolve to the same Issues.
 
 If the manifest and reality disagree, **stop and report it** — raise a Linear
 Issue. Do not silently "fix" reality to match the manifest, and do not edit the
