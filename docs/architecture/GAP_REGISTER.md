@@ -33,8 +33,8 @@ Provenance keys: **E1** = WORK-164 comment `e848ae43` (Current evidence), **E2**
 | G06 | Legacy `fire_allowance_tracker` anon/auth grants (latent) → revoked; exposure verified | SEC/DEF | security | Med | [WORK-144](https://linear.app/catalyst-app-development/issue/WORK-144) (Investigation), [WORK-145](https://linear.app/catalyst-app-development/issue/WORK-145) (Backlog) | Yes (145) | No | E1 |
 | G07 | Legacy schema + `public.fat_*` present → archived then retired | APG | data / migration | Med | [WORK-168](https://linear.app/catalyst-app-development/issue/WORK-168) (Backlog, blocked by WORK-145) | Yes | Yes (archive location/retention) | E1, D2 |
 | G08 | Generators recall/retain/spoilt/delayed return `[]` → all types generate | APG | architecture | Med | [WORK-173](https://linear.app/catalyst-app-development/issue/WORK-173) (Backlog, blocked by WORK-171, WORK-172) | Later (deploy) | Yes (rules) | E1, D1/D4/D9b/D9d |
-| G09 | Two payment truths (SB/MD) → single truth | APG | architecture / data | High | [WORK-171](https://linear.app/catalyst-app-development/issue/WORK-171) (plan; spawns execution Issues) | Later | No | E1, D6 |
-| G10 | Prototype per-type + parent/child storage primary → canonical primary via verified transform-copy; prototype read-only then retired | APG | migration | High | WORK-171 (plan; spawns execution Issues) | Yes (data migration) | No | E1, D1/D2/D9c |
+| G09 | Two payment truths (SB/MD) → single truth | APG | architecture / data | High | [WORK-171](https://linear.app/catalyst-app-development/issue/WORK-171) (plan, [`CUTOVER_PLAN.md`](CUTOVER_PLAN.md)); execution: WORK-191 (C3), WORK-193 (C5), WORK-194 (C6) | Later | No | E1, D6 |
+| G10 | Prototype per-type + parent/child storage primary → canonical primary via verified transform-copy; prototype read-only then retired | APG | migration | High | WORK-171 (plan, [`CUTOVER_PLAN.md`](CUTOVER_PLAN.md)); execution: WORK-189 (C1), WORK-190 (C2), WORK-192 (C4), WORK-193 (C5), WORK-194 (C6), WORK-195 (C7) | Yes (data migration) | No | E1, D1/D2/D9c |
 | G11 | Code constants + per-user `user_rates`; retain constant truncated → global versioned rate/rule model, full precision, audited per-claim override | APG | data / architecture | Med | [WORK-172](https://linear.app/catalyst-app-development/issue/WORK-172) (Backlog) | Later | Yes (rate values / effective dates) | E1, D4/D9e |
 | G12 | Fake $0 Recall Excess Travel child → none; real entitlement only under a verified rule | SEC/DEF | product | Low | [WORK-174](https://linear.app/catalyst-app-development/issue/WORK-174) (Backlog); rule part in WORK-173 | Later (runtime promotion) | No | E1, D9d |
 | G13 | SB/M&D excess travel ungated → evidence-derived rule, fail closed | EVID | product | Med | [WORK-170](https://linear.app/catalyst-app-development/issue/WORK-170) (Backlog); implementation in WORK-173 | No | **Yes — exact rule unknown** | E2, D3 |
@@ -78,8 +78,8 @@ Tier 2 — revised target & rules
 Tier 3 — generators
   WORK-173 (G08; SB/M&D gating needs WORK-170)
         │
-Tier 4 — cutover execution (Issues spawned by WORK-171): transform-copy + parity,
-          single payment truth, prototype read-only → retired
+Tier 4 — cutover execution (WORK-189…195 = C1–C7, see CUTOVER_PLAN.md): transform-copy +
+          parity, single payment truth, prototype read-only → retired
         │
 Tier 5 — Payments activation: WORK-175 (G15)
         │
