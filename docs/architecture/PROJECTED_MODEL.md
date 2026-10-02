@@ -201,7 +201,7 @@ amounts are never silently recalculated.
 is incremental and evidence-gated:
 
 1. **PROD parity and security first** (WORK-165, WORK-166, WORK-167, WORK-145, WORK-186).
-2. Revised canonical target and cutover plan approved (WORK-171).
+2. Revised canonical target and cutover plan approved (WORK-171; see [`CUTOVER_PLAN.md`](CUTOVER_PLAN.md)).
 3. Versioned rate/rule model (WORK-172); verified rules (WORK-170); generators (WORK-173).
 4. **Transform-copy** prototype data into canonical tables, prove parity; keep prototype
    storage **read-only** until verification sign-off.
