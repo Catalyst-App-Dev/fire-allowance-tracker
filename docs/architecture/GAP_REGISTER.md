@@ -27,8 +27,8 @@ Provenance keys: **E1** = WORK-164 comment `e848ae43` (Current evidence), **E2**
 |---|---|---|---|---|---|---|---|---|
 | G01 | PROD lacks canonical 15–18 integrity locks/status check → parity | SEC/DEF | data / security | High | [WORK-165](https://linear.app/catalyst-app-development/issue/WORK-165) (Backlog) | Yes | No | E1, D9g |
 | G02 | PROD lacks canonical 19 `user_feature_flags` → parity | SEC/DEF | data | Med | WORK-165 (Backlog) | Yes | No | E1 |
-| G03 | PROD `fat` default ACL / anon grants unhardened → canonical 21 posture | SEC/DEF | security | High | [WORK-166](https://linear.app/catalyst-app-development/issue/WORK-166) (Backlog); DEV provenance WORK-93 | Yes | No | E1 |
-| G04 | PROD lacks no-PUBLIC-execute trigger; legacy PUBLIC-exec fns both DBs → enforced | SEC/DEF | security | High | WORK-166 (Backlog); DEV provenance WORK-103 | Yes | No | E1 |
+| G03 | PROD `fat` default ACL / anon grants unhardened → canonical 21 posture | SEC/DEF | security | High | [WORK-166](https://linear.app/catalyst-app-development/issue/WORK-166) (Active; migration `20261004120000_fat_harden_privileges`, PROD pending approval); DEV provenance WORK-93 | Yes | No | E1 |
+| G04 | PROD lacks no-PUBLIC-execute trigger; legacy PUBLIC-exec fns both DBs → enforced | SEC/DEF | security | High | WORK-166 (Active; same migration); DEV provenance WORK-103 | Yes | No | E1 |
 | G05 | Anon-executable SECURITY DEFINER FAT functions in PROD → none | SEC/DEF | security | High | [WORK-167](https://linear.app/catalyst-app-development/issue/WORK-167) (Backlog) | Yes | No | E1, WORK-144 record |
 | G06 | Legacy `fire_allowance_tracker` anon/auth grants (latent) → revoked; exposure verified | SEC/DEF | security | Med | [WORK-144](https://linear.app/catalyst-app-development/issue/WORK-144) (Investigation), [WORK-145](https://linear.app/catalyst-app-development/issue/WORK-145) (Backlog) | Yes (145) | No | E1 |
 | G07 | Legacy schema + `public.fat_*` present → archived then retired | APG | data / migration | Med | [WORK-168](https://linear.app/catalyst-app-development/issue/WORK-168) (Backlog, blocked by WORK-145) | Yes | Yes (archive location/retention) | E1, D2 |

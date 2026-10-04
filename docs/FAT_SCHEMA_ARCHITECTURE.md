@@ -86,6 +86,36 @@ has. PROD (`wgcqzamuspuqpedqasbc`) carries the same broad defaults per GOV-102
 but is untouched by this migration; hardening PROD is a separate, explicitly
 approved migration.
 
+### Existing grants and PROD parity (WORK-166)
+
+Canonical 21/22 only changed *future* objects, so two things were left behind
+in **both** DBs: every existing `fat` table still granted `anon` every table
+privilege, and `payslip_line_content_fp`, `payslip_line_fp_trigger` and
+`set_updated_at` (older than canonical 22's trigger) stayed PUBLIC- and
+anon-executable. PROD also never received canonical 21/22.
+
+[`supabase/migrations/20261004120000_fat_harden_privileges.sql`](../supabase/migrations/20261004120000_fat_harden_privileges.sql)
+(rollback in [`supabase/rollbacks/`](../supabase/rollbacks/20261004120000_fat_harden_privileges.rollback.sql))
+closes both, with one idempotent file for both projects:
+
+* canonical 21 default-ACL revokes (a no-op in DEV);
+* canonical 22 handler and `fat_enforce_no_public_execute` event trigger,
+  created only when absent (DEV's APP-103 objects are left as they are);
+* `anon` loses every privilege on every `fat` table and sequence;
+* PUBLIC and `anon` lose EXECUTE on the three functions above;
+* a postcondition block aborts the whole migration unless all of this holds.
+
+**The app needs no `anon` access to `fat`.** No pre-auth page queries `fat`,
+both API routes require and forward the user's JWT, and no RLS policy admits a
+NULL `auth.uid()`. `authenticated` and `service_role` grants are unchanged
+(`payslip_line_fp_trigger` is SECURITY INVOKER and calls
+`payslip_line_content_fp` as the caller, so `authenticated` keeps EXECUTE on
+it). `anon` keeps `USAGE` on the schema so PostgREST exposure is unchanged.
+
+Applied state is read from each project's `supabase_migrations.schema_migrations`,
+never from this file. PROD is applied only with explicit operator approval for
+this migration (see `docs/PROD_ROLLOUT_CHECKLIST.md`).
+
 **Verified DEV effect of the migration** (see PR evidence for the full probe):
 newly created tables and sequences get *no* grant to `anon`/`authenticated`/
 `service_role` — owner-only, exactly as intended. Newly created functions also
