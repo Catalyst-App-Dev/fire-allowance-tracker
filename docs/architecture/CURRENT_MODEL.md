@@ -190,7 +190,8 @@ functions, RLS on every table.**
   `fat_parity_21_canonical_ffh_home_distances`.
 - **Absent:** canonical 15 (payment_status check), 16 (over-allocation `FOR UPDATE`),
   17 (duplicate-confirm advisory lock), 18 (retract reopen), 19 `user_feature_flags`,
-  21 (default-privilege hardening), 22 (no-PUBLIC-execute trigger); GOV-89 / APP-92 cleanup.
+  GOV-89 / APP-92 cleanup. (Canonical 21/22 posture applied 2026-10-04 by WORK-166 — see
+  *Current security posture*.)
 - Data (counts): auth.users 3, `fat.profiles` 3, `claim_groups` 4, `recalls` 4,
   `spoilt_meals` 2, `financial_years` 2, `claim_sequences` 2; canonical claim /
   entitlement / payment tables 0; reference: stations 83, station_distance_matrix 6642,
@@ -224,8 +225,9 @@ functions, RLS on every table.**
 | Canonical migrations | 01–14 (+ dual_write/ffh) | 01–22 (+ dual_write/ffh) |
 | `user_feature_flags` | absent | present |
 | Integrity locks 15–18 | absent | present |
-| Default privileges | anon ALL on future objects | none (hardened) |
-| No-PUBLIC-execute trigger | absent (`ensure_rls` instead) | present |
+| Default privileges | none (hardened, WORK-166) | none (hardened) |
+| No-PUBLIC-execute trigger | present (WORK-166; `ensure_rls` also present) | present |
+| anon privileges on `fat` tables / functions | none (WORK-166) | none (WORK-166) |
 | Friends/replication | absent | absent (removed, WORK-169) |
 | Legacy `fire_allowance_tracker` / `public.fat_*` | present | removed |
 
@@ -234,12 +236,14 @@ promotable as-is).
 
 ## Current security posture
 
-- PROD `fat`: default ACL grants anon ALL on future tables/sequences/functions; all 35
-  tables grant anon every privilege (RLS on).
+- `fat`, both projects (WORK-166, verified 2026-10-04; PROD ledger
+  `20261004222427 work166_fat_harden_privileges`, DEV `20261004202335`): no `fat` default
+  ACLs; anon holds no privilege on any `fat` table (PROD 0/36, DEV 0/34; RLS on all);
+  no `fat` function is PUBLIC- or anon-executable; event trigger
+  `fat_enforce_no_public_execute` enabled. `authenticated`/`service_role` table grants
+  unchanged (least-privilege trim: WORK-237).
 - PROD: `public.fat_set_updated_at` and `public.rls_auto_enable` SECURITY DEFINER,
   anon-executable; `fat.increment_claim_sequence` executable by authenticated.
-- Both: `payslip_line_content_fp`, `payslip_line_fp_trigger`, `set_updated_at`
-  PUBLIC-executable.
 - PROD legacy `fire_allowance_tracker`: full anon/authenticated grants, no schema USAGE
   (latent). PostgREST exposed-schema list unverified (WORK-144).
 - Leaked-password protection off (both projects).

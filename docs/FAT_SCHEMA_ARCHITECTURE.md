@@ -113,8 +113,8 @@ NULL `auth.uid()`. `authenticated` and `service_role` grants are unchanged
 it). `anon` keeps `USAGE` on the schema so PostgREST exposure is unchanged.
 
 Applied state is read from each project's `supabase_migrations.schema_migrations`,
-never from this file. PROD is applied only with explicit operator approval for
-this migration (see `docs/PROD_ROLLOUT_CHECKLIST.md`).
+never from this file. Applied with explicit operator approval on 2026-10-04:
+DEV `20261004202335`, PROD `20261004222427` (both `work166_fat_harden_privileges`).
 
 **Verified DEV effect of the migration** (see PR evidence for the full probe):
 newly created tables and sequences get *no* grant to `anon`/`authenticated`/
