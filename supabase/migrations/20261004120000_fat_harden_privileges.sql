@@ -107,11 +107,13 @@ revoke execute on function fat.set_updated_at() from public, anon;
 revoke execute on function fat._enforce_no_public_execute() from public, anon;
 
 -- 5. Postconditions. Any failure raises and rolls the whole migration back.
+--    Privilege functions are wrapped in CASE so they are only evaluated on the
+--    relation kind they accept, whatever order the planner applies filters in.
 do $assert$
 declare
   bad text;
 begin
-  select string_agg(pg_get_userbyid(d.defaclrole) || ':' || d.defaclobjtype || ':' || d.defaclacl::text, '; ')
+  select string_agg(pg_get_userbyid(d.defaclrole) || ':' || d.defaclobjtype::text || ':' || d.defaclacl::text, '; ')
     into bad
   from pg_default_acl d
   join pg_namespace n on n.oid = d.defaclnamespace
@@ -130,8 +132,9 @@ begin
   from pg_class c
   join pg_namespace n on n.oid = c.relnamespace
   where n.nspname = 'fat'
-    and c.relkind in ('r', 'p', 'v', 'm', 'f')
-    and has_table_privilege('anon', c.oid, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN');
+    and case when c.relkind in ('r', 'p', 'v', 'm', 'f')
+             then has_table_privilege('anon', c.oid, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')
+             else false end;
   if bad is not null then
     raise exception 'WORK-166 postcondition failed: anon still holds privileges on fat relations: %', bad;
   end if;
@@ -141,8 +144,9 @@ begin
   from pg_class c
   join pg_namespace n on n.oid = c.relnamespace
   where n.nspname = 'fat'
-    and c.relkind = 'S'
-    and has_sequence_privilege('anon', c.oid, 'USAGE,SELECT,UPDATE');
+    and case when c.relkind = 'S'
+             then has_sequence_privilege('anon', c.oid, 'USAGE,SELECT,UPDATE')
+             else false end;
   if bad is not null then
     raise exception 'WORK-166 postcondition failed: anon still holds privileges on fat sequences: %', bad;
   end if;
