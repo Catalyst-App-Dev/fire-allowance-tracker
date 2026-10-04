@@ -292,6 +292,6 @@ created by WORK-164: WORK-165 – WORK-187.
 | CURRENT_STATE_GAP_ANALYSIS, SCHEMA_READINESS | STALE | overtaken |
 | Activation / seed reports, SALVAGE, BRANCH_DISPOSITION | HISTORICAL | SALVAGE is the only FFH record |
 | Root `DISTANCE-SYSTEM-DEPLOY-REPORT.md`, `FAT_SCHEMA_AUDIT_REPORT.md`, `supabase-migration-v4-*.sql` | HISTORICAL | — |
-| governance-system `chatgpt-project-sources/fire-allowance-tracker/*_v1.0.md` | FUTURE-DESIGN INPUT / provenance | Draft; false greenfield premise |
+| governance-system `chatgpt-project-sources/fire-allowance-tracker/*_v1.0.md` — now held in FAT at [`docs/legacy/chatgpt-project-sources/`](../legacy/chatgpt-project-sources/README.md) (WORK-220) | FUTURE-DESIGN INPUT / provenance | Draft; false greenfield premise |
 
 Reconciliation of stale documents is owned by WORK-185.
