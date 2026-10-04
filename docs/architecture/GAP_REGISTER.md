@@ -30,8 +30,8 @@ Provenance keys: **E1** = WORK-164 comment `e848ae43` (Current evidence), **E2**
 | G03 | ~~PROD `fat` default ACL / anon grants unhardened → canonical 21 posture~~ **Closed 2026-10-04:** no `fat` default ACLs and anon holds no `fat` table privilege in PROD and DEV (migration `20261004120000_fat_harden_privileges`; PROD ledger `20261004222427`, DEV `20261004202335`) | SEC/DEF | security | — | [WORK-166](https://linear.app/catalyst-app-development/issue/WORK-166) (completed); DEV provenance WORK-93 | Yes (given 2026-10-04) | No | E1 |
 | G04 | ~~PROD lacks no-PUBLIC-execute trigger; legacy PUBLIC-exec fns both DBs → enforced~~ **Closed 2026-10-04:** `fat_enforce_no_public_execute` present and enabled in PROD; no `fat` function PUBLIC/anon-executable in either DB (same migration) | SEC/DEF | security | — | WORK-166 (completed); DEV provenance WORK-103 | Yes (given 2026-10-04) | No | E1 |
 | G05 | Anon-executable SECURITY DEFINER FAT functions in PROD → none | SEC/DEF | security | High | [WORK-167](https://linear.app/catalyst-app-development/issue/WORK-167) (Backlog) | Yes | No | E1, WORK-144 record |
-| G06 | Legacy `fire_allowance_tracker` anon/auth grants (latent) → revoked; exposure verified | SEC/DEF | security | Med | [WORK-144](https://linear.app/catalyst-app-development/issue/WORK-144) (Investigation), [WORK-145](https://linear.app/catalyst-app-development/issue/WORK-145) (Backlog) | Yes (145) | No | E1 |
-| G07 | Legacy schema + `public.fat_*` present → archived then retired | APG | data / migration | Med | [WORK-168](https://linear.app/catalyst-app-development/issue/WORK-168) (Backlog, blocked by WORK-145) | Yes | Yes (archive location/retention) | E1, D2 |
+| G06 | Legacy `fire_allowance_tracker` anon/auth grants (latent) → exposure verified; removed with schema retirement. **WORK-144 (2026-10-04):** not exposed (live `PGRST106`), no API role has USAGE, GraphQL disabled, unused by code — standalone revocation no longer proportionate under the Supabase → Neon transition (GOV-481); grants disappear with WORK-168 / Supabase retirement | SEC/DEF | security | Low (latent) | [WORK-144](https://linear.app/catalyst-app-development/issue/WORK-144) (investigation complete); retirement: [WORK-168](https://linear.app/catalyst-app-development/issue/WORK-168); [WORK-145](https://linear.app/catalyst-app-development/issue/WORK-145) recommended Cancelled (operator decision pending) | Yes (168) | No | E1, WORK-144 record 2026-10-04 |
+| G07 | Legacy schema + `public.fat_*` present → archived then retired | APG | data / migration | Med | [WORK-168](https://linear.app/catalyst-app-development/issue/WORK-168) (Backlog; WORK-145 blocker removed 2026-10-04; exclude from FAT Neon migration, drop after verified Neon cutover) | Yes | Yes (archive location/retention) | E1, D2 |
 | G08 | Generators recall/retain/spoilt/delayed return `[]` → all types generate | APG | architecture | Med | [WORK-173](https://linear.app/catalyst-app-development/issue/WORK-173) (Backlog, blocked by WORK-171, WORK-172) | Later (deploy) | Yes (rules) | E1, D1/D4/D9b/D9d |
 | G09 | Two payment truths (SB/MD) → single truth | APG | architecture / data | High | [WORK-171](https://linear.app/catalyst-app-development/issue/WORK-171) (plan, [`CUTOVER_PLAN.md`](CUTOVER_PLAN.md)); execution: WORK-191 (C3), WORK-193 (C5), WORK-194 (C6) | Later | No | E1, D6 |
 | G10 | Prototype per-type + parent/child storage primary → canonical primary via verified transform-copy; prototype read-only then retired | APG | migration | High | WORK-171 (plan, [`CUTOVER_PLAN.md`](CUTOVER_PLAN.md)); execution: WORK-189 (C1), WORK-190 (C2), WORK-192 (C4), WORK-193 (C5), WORK-194 (C6), WORK-195 (C7) | Yes (data migration) | No | E1, D1/D2/D9c |
@@ -70,7 +70,7 @@ Tier 0 — independent, can start now
         │
 Tier 1 — PROD parity & security (precedes every tier below)
   WORK-165 (G01/G02)  WORK-166 (G03/G04, done)  WORK-167 (G05)
-  WORK-144 → WORK-145 (G06)  WORK-186 (G25)
+  WORK-144 (G06, investigation done; no pre-cutover fix needed)  WORK-186 (G25)
         │
 Tier 2 — revised target & rules
   WORK-171 (G09/G10 plan)  WORK-172 (G11)
@@ -83,7 +83,7 @@ Tier 4 — cutover execution (WORK-189…195 = C1–C7, see CUTOVER_PLAN.md): tr
         │
 Tier 5 — Payments activation: WORK-175 (G15)
         │
-Tier 6 — legacy retirement: WORK-168 (G07; after WORK-145 and verified archive)
+Tier 6 — legacy retirement: WORK-168 (G07; after verified archive; drop with Supabase retirement after FAT Neon cutover)
 ```
 
 Rule: **no Phase-3 activation, canonical cutover or Payments enablement before Tier 1 is
@@ -95,7 +95,7 @@ complete.**
 - Authoritative current rate values and effective dates — WORK-172.
 - Payslip PII/retention policy — WORK-176.
 - Sheets cadence/target, calendar event scope — WORK-178, WORK-179.
-- PostgREST exposed-schema list, Vercel env inventory — WORK-144, WORK-182.
+- Vercel env inventory — WORK-182. (PostgREST exposed-schema list resolved by WORK-144.)
 
 ## Maintenance
 
