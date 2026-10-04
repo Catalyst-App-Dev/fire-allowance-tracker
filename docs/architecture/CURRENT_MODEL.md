@@ -244,8 +244,13 @@ promotable as-is).
   unchanged (least-privilege trim: WORK-237).
 - PROD: `public.fat_set_updated_at` and `public.rls_auto_enable` SECURITY DEFINER,
   anon-executable; `fat.increment_claim_sequence` executable by authenticated.
-- PROD legacy `fire_allowance_tracker`: full anon/authenticated grants, no schema USAGE
-  (latent). PostgREST exposed-schema list unverified (WORK-144).
+- PROD legacy `fire_allowance_tracker` (WORK-144, verified 2026-10-04): anon/authenticated
+  hold direct `arwdDxtm` grants on all 11 tables and `fire_allowance_claims` has `true` CRUD
+  policies, but the schema is **not externally reachable**: PostgREST exposes only `public,
+  graphql_public, fat, mica, shared, cab, dog_log` (live `PGRST106`), no API role (anon,
+  authenticated, service_role, authenticator) has schema USAGE, and `pg_graphql` is not
+  enabled. Latent only; disposition is retire with Supabase (WORK-168), not standalone
+  revocation. Guardrail: never expose it or grant USAGE on it before retirement.
 - Leaked-password protection off (both projects).
 - `.claude/settings.local.json` committed with a private Google Sheet URL.
 
