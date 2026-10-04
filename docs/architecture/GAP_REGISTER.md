@@ -27,8 +27,8 @@ Provenance keys: **E1** = WORK-164 comment `e848ae43` (Current evidence), **E2**
 |---|---|---|---|---|---|---|---|---|
 | G01 | PROD lacks canonical 15–18 integrity locks/status check → parity | SEC/DEF | data / security | High | [WORK-165](https://linear.app/catalyst-app-development/issue/WORK-165) (Backlog) | Yes | No | E1, D9g |
 | G02 | PROD lacks canonical 19 `user_feature_flags` → parity | SEC/DEF | data | Med | WORK-165 (Backlog) | Yes | No | E1 |
-| G03 | PROD `fat` default ACL / anon grants unhardened → canonical 21 posture | SEC/DEF | security | High | [WORK-166](https://linear.app/catalyst-app-development/issue/WORK-166) (Active; migration `20261004120000_fat_harden_privileges`, PROD pending approval); DEV provenance WORK-93 | Yes | No | E1 |
-| G04 | PROD lacks no-PUBLIC-execute trigger; legacy PUBLIC-exec fns both DBs → enforced | SEC/DEF | security | High | WORK-166 (Active; same migration); DEV provenance WORK-103 | Yes | No | E1 |
+| G03 | ~~PROD `fat` default ACL / anon grants unhardened → canonical 21 posture~~ **Closed 2026-10-04:** no `fat` default ACLs and anon holds no `fat` table privilege in PROD and DEV (migration `20261004120000_fat_harden_privileges`; PROD ledger `20261004222427`, DEV `20261004202335`) | SEC/DEF | security | — | [WORK-166](https://linear.app/catalyst-app-development/issue/WORK-166) (completed); DEV provenance WORK-93 | Yes (given 2026-10-04) | No | E1 |
+| G04 | ~~PROD lacks no-PUBLIC-execute trigger; legacy PUBLIC-exec fns both DBs → enforced~~ **Closed 2026-10-04:** `fat_enforce_no_public_execute` present and enabled in PROD; no `fat` function PUBLIC/anon-executable in either DB (same migration) | SEC/DEF | security | — | WORK-166 (completed); DEV provenance WORK-103 | Yes (given 2026-10-04) | No | E1 |
 | G05 | Anon-executable SECURITY DEFINER FAT functions in PROD → none | SEC/DEF | security | High | [WORK-167](https://linear.app/catalyst-app-development/issue/WORK-167) (Backlog) | Yes | No | E1, WORK-144 record |
 | G06 | Legacy `fire_allowance_tracker` anon/auth grants (latent) → revoked; exposure verified | SEC/DEF | security | Med | [WORK-144](https://linear.app/catalyst-app-development/issue/WORK-144) (Investigation), [WORK-145](https://linear.app/catalyst-app-development/issue/WORK-145) (Backlog) | Yes (145) | No | E1 |
 | G07 | Legacy schema + `public.fat_*` present → archived then retired | APG | data / migration | Med | [WORK-168](https://linear.app/catalyst-app-development/issue/WORK-168) (Backlog, blocked by WORK-145) | Yes | Yes (archive location/retention) | E1, D2 |
@@ -69,7 +69,7 @@ Tier 0 — independent, can start now
   WORK-177 / 178 / 179 (G17 — do not depend on Phase 3; must respect isolation)
         │
 Tier 1 — PROD parity & security (precedes every tier below)
-  WORK-165 (G01/G02)  WORK-166 (G03/G04)  WORK-167 (G05)
+  WORK-165 (G01/G02)  WORK-166 (G03/G04, done)  WORK-167 (G05)
   WORK-144 → WORK-145 (G06)  WORK-186 (G25)
         │
 Tier 2 — revised target & rules
