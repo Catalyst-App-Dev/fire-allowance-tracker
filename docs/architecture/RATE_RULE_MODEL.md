@@ -118,8 +118,10 @@ The matrix is a test (`__tests__/rate-model.test.mjs`).
 | `travel_per_km` (Motor Vehicle / Mileage, Div A) | 1.37 from 2021-01-01, then **1.50 from 2023-06-17**. The workbook $1.20 (2025-06-01) is **withdrawn** |
 | `meal_allowance` (Div A) | 18.75 from 2021-01-01, then 20.53 from 2023-06-17 |
 | `spoilt_meal_allowance` (Div A) | 18.74 from 2021-01-01, then 20.52 from 2023-06-17 |
-| `small_meal` / `large_meal` | 10.90 / 20.55 from 2025-06-01, `workbook` provenance. Kept, because meal formulas map to industrial codes under **WORK-173** |
+| `small_meal` / `large_meal` | 10.90 / 20.55 from 2025-06-01, `workbook` provenance. **WORK-173 canonical generators never read them**: recall/retain/delayed meals use `meal_allowance` and spoilt meals `spoilt_meal_allowance` (see `CANONICAL_ENTITLEMENT_RULES.md`). Still read by the SB night meal (WORK-249) and the prototype path (WORK-250) |
 | `standby_hours` / `md_hours` | 0.5 / 1.0 h, `industrial_instrument` (EBA cl 85.8.4(b) / 85.8.1; WORK-170) |
+| `single_time_multiplier` / `time_and_half_multiplier` | 1 / 1.5 from 2020-07-01, `industrial_instrument` — "ordinary rates" (cl 128.4, 85.8.9, 85.8.1/85.8.4) and Sunday/public-holiday recall travel (cl 128.4). WORK-173 |
+| `relieving_allowance` (Div A) | **35.11 from 2023-06-17** (PR765587). The 2020 Schedule 4 $30.52 is **not** seeded because the 2021-01-01 variation value is not evidenced; earlier dates fail closed. WORK-173 |
 
 PR765587 makes the new rates payable "from the first pay period after 16 June 2023". The effective date of 2023-06-17 is the date-level lower bound of that pay period. FAT holds no claims before 2026-05-29, so the up-to-a-week approximation affects nothing stored.
 

@@ -94,6 +94,16 @@ Operational Claim → Versioned entitlement engine → 0..N Generated Entitlemen
     home→rostered journey (distance form `max(0, d(home,T) − d(home,R))`); mileage only
     where cl. 85.9 applies (Division A Motor Vehicle / Mileage rate history in `fat.rate_versions`, `travel_per_km`; see `RATE_RULE_MODEL.md`). Implementation:
     WORK-173. Evidence record: WORK-170.
+- **Recall / Retain / Spoilt / Delayed — approved rules (WORK-173, PROMPT #15):**
+  [`CANONICAL_ENTITLEMENT_RULES.md`](CANONICAL_ENTITLEMENT_RULES.md). Recall: 4 h minimum at
+  double time (cl 128.2), travelling time at ordinary rates (×1.5 Sunday/public holiday) and
+  mileage for the actual home → work → home trip on **every** recall (cl 128.4 — no
+  further-from-home gate, not the SB/M&D radius rule), Relieving Allowance when recalled to
+  another station (cl 85.8.10), meals per cl 85.6.3. Retain: ≥ 60 min → 4 h minimum at double
+  time (cl 128.5), shorter → cl 128.1 overtime, nearest quarter hour, notice irrelevant
+  (cl 128.7), travel home after an interrupted night shift (cl 85.8.9), meals per cl 85.6.4.
+  Spoilt (cl 85.7.1, `spoilt_meal_allowance`) and Delayed (cl 85.6.6/85.6.7, `meal_allowance`)
+  are separate types.
 - **Recall excess travel — D9d:** an entitlement is generated only when an authoritative
   rule establishes one; never a cosmetic $0 row.
 - **Retain — D4:** hours-first; any displayed estimate derives from the applicable

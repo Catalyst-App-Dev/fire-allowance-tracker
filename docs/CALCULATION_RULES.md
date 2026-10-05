@@ -8,6 +8,12 @@
 > withdrawn. Retain overtime estimate = round(Base Pay[classification on claim date] × 90.93 % ÷ 36, 2) × 2 — the FAT
 > best-fit estimate convention (WORK-246), not FRV payroll's formula; ÷36 is payroll-reconciled (D-172-1).
 
+> **WORK-173 (2026-10-05):** the canonical Recall / Retain / Spoilt / Delayed rules are in
+> [`architecture/CANONICAL_ENTITLEMENT_RULES.md`](architecture/CANONICAL_ENTITLEMENT_RULES.md)
+> (FRV EBA 2020 cl 128, 85.6–85.8). This document describes the **prototype** path; its
+> known divergences (ceiling-rounded retain hours, workbook meal values, Delayed = small meal)
+> are tracked in WORK-250 / WORK-249 / WORK-248.
+
 **Version:** 1.3
 **Last reviewed:** 2026-05 (canonical-rate refactor — double meal derived from small + large; spoilt, delayed and standby-night meals all source the canonical `smallMealAllowance`; the obsolete `overnightAllowance` rate has been removed because overnight cash is captured per-claim, not as a rate)
 **Status:** Active — review annually when award or ATO rates change
