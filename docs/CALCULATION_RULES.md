@@ -1,5 +1,12 @@
 # Fire Allowance Tracker — Calculation Rules
 
+> **WORK-172 (2026-10-05) supersedes the rate-source statements below.** Rates are now
+> global, versioned and effective-dated in `fat.rates` / `fat.rate_versions`
+> ([`architecture/RATE_RULE_MODEL.md`](architecture/RATE_RULE_MODEL.md)); `fat.user_rates`
+> is no longer a rate source. The km rate is the industrial Division A Motor Vehicle /
+> Mileage Allowance — **$1.50/km from 2023-06-17 (PR765587)**; the workbook $1.20 is
+> withdrawn. Retain overtime = Base Pay[classification] × 90.93 % ÷ 36 × 2 (D-172-1).
+
 **Version:** 1.3
 **Last reviewed:** 2026-05 (canonical-rate refactor — double meal derived from small + large; spoilt, delayed and standby-night meals all source the canonical `smallMealAllowance`; the obsolete `overnightAllowance` rate has been removed because overnight cash is captured per-claim, not as a rate)
 **Status:** Active — review annually when award or ATO rates change
@@ -60,7 +67,7 @@ total_km      = dist_home_km + dist_stn_km
 
 - `dist_home_km` — kilometres from the firefighter's home to the station attended.
 - `dist_stn_km` — additional kilometres if recalled to a different station than the rostered one. Set to 0 if same station.
-- `kilometre_rate` — FRV/FBEU per-kilometre award reimbursement rate (default: $1.20/km — confirmed FRV award rate 2025).
+- `kilometre_rate` — FRV/FBEU per-kilometre award reimbursement rate (default: $1.50/km — confirmed FRV award rate 2025).
 
 ### Meal Component (`mealie_amount`)
 
@@ -195,7 +202,7 @@ Until this is confirmed, `retainAllowancePerHour` in `defaultRates.js` is set to
 
 ## 6. Travel / Kilometre Rate
 
-**Current rate:** $1.20/km (user-confirmed award rate 2025)
+**Current rate:** $1.50/km (user-confirmed award rate 2025)
 
 **Source:** NSW Fire Brigades / FBEU Enterprise Agreement. This is an award rate, not the ATO cents-per-kilometre rate.
 
@@ -216,7 +223,7 @@ Defined in `lib/calculations/defaultRates.js`. The Settings UI exposes only thes
 
 | Rate Key | Default | Status | Description |
 |---|---|---|---|
-| `kilometreRate` | $1.20/km | ✅ Confirmed | Award rate (user-confirmed 2025) |
+| `kilometreRate` | $1.50/km | ✅ Confirmed | Award rate (user-confirmed 2025) |
 | `smallMealAllowance` | $10.90 | ✅ Confirmed | Single disrupted meal (confirmed FRV). **Also the source rate for Spoilt, Delayed and Standby-Night meals.** |
 | `largeMealAllowance` | $20.55 | ✅ Confirmed | Full meal allowance (confirmed FRV — flat rate, NOT 2× small). |
 

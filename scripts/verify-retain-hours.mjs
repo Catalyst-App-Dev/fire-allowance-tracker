@@ -2,7 +2,11 @@
 // Run: node scripts/verify-retain-hours.mjs
 
 import { calcRetainHours, calcRetainClaim } from '../lib/calculations/engine.js'
-import { RETAIN_OVERTIME_HOURLY_RATE } from '../lib/calculations/defaultRates.js'
+import { resolveOvertimeRate, overtimeLineAmount } from '../lib/fat/rates/rateModel.js'
+import { FIXTURE_CATALOG, FIXTURE_LFF_HISTORY } from '../lib/fat/rates/fixtureCatalog.js'
+
+// Versioned overtime rule (WORK-172), Leading Firefighter.
+const overtime = resolveOvertimeRate(FIXTURE_CATALOG, { date: '2026-06-13', classificationHistory: FIXTURE_LFF_HISTORY })
 
 const cases = [
   // ── Day shift ─────────────────────────────────────────────────────────────
@@ -55,13 +59,13 @@ console.log(`Total: ${pass + fail}   Pass: ${pass}   Fail: ${fail}`)
 
 // ── Maint Stn N/N dollar derivation (canonical overtime rate) ─────────────────
 console.log()
-console.log(`── Maint Stn N/N $ derivation ($${RETAIN_OVERTIME_HOURLY_RATE.toFixed(4)}/h) ──`)
+console.log(`── Maint Stn N/N $ derivation (LFF base $${overtime.baseHourly}/h × ${overtime.multiplier}) ──`)
 const dollarCases = [
-  { shift: 'Day', bookedOffTime: '19:00', expectHours: 4.00, expectAmount: 404.09, label: '4.00h → Maint Stn N/N $404.09' },
-  { shift: 'Day', bookedOffTime: '22:15', expectHours: 4.25, expectAmount: 429.35, label: '4.25h → Maint Stn N/N $429.35' },
+  { shift: 'Day', bookedOffTime: '19:00', expectHours: 4.00, expectAmount: 404.08, label: '4.00h → Maint Stn N/N $404.08 (payslip $404.09; ±$0.01 accepted)' },
+  { shift: 'Day', bookedOffTime: '22:15', expectHours: 4.25, expectAmount: 429.34, label: '4.25h → Maint Stn N/N $429.34' },
 ]
 for (const { shift, bookedOffTime, expectHours, expectAmount, label } of dollarCases) {
-  const b = calcRetainClaim({ shift, bookedOffTime, overnightCash: 0 }, { smallMealAllowance: 10.90, largeMealAllowance: 20.55 })
+  const b = calcRetainClaim({ shift, bookedOffTime, overnightCash: 0 }, { smallMealAllowance: 10.90, largeMealAllowance: 20.55, overtime })
   const okH = Math.abs(b.generatedHours - expectHours) < 0.001
   const okA = Math.abs(b.retainAmount - expectAmount) < 0.001
   const ok = okH && okA
@@ -70,10 +74,10 @@ for (const { shift, bookedOffTime, expectHours, expectAmount, label } of dollarC
 }
 // Direct rate spot-check: 1.25h → $126.28
 {
-  const amt = Math.round((1.25 * RETAIN_OVERTIME_HOURLY_RATE + Number.EPSILON) * 100) / 100
+  const amt = overtimeLineAmount(1.25, overtime)
   const ok = Math.abs(amt - 126.28) < 0.001
   if (ok) pass++; else { fail++; failures.push({ label: '1.25h → $126.28', gotAmount: amt }) }
-  console.log(`${ok ? '✓' : '✗'} 1.25h × $${RETAIN_OVERTIME_HOURLY_RATE.toFixed(4)} = $${amt.toFixed(2)}  (expect $126.28)`)
+  console.log(`${ok ? '✓' : '✗'} 1.25h × $${overtime.baseHourly} × ${overtime.multiplier} = $${amt.toFixed(2)}  (expect $126.28)`)
 }
 
 console.log()

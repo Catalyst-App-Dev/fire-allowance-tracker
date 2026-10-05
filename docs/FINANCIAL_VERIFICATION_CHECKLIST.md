@@ -1,5 +1,12 @@
 # Fire Allowance Tracker — Financial Verification Checklist
 
+> **WORK-172 (2026-10-05) supersedes the rate-source statements below.** Rates are now
+> global, versioned and effective-dated in `fat.rates` / `fat.rate_versions`
+> ([`architecture/RATE_RULE_MODEL.md`](architecture/RATE_RULE_MODEL.md)); `fat.user_rates`
+> is no longer a rate source. The km rate is the industrial Division A Motor Vehicle /
+> Mileage Allowance — **$1.50/km from 2023-06-17 (PR765587)**; the workbook $1.20 is
+> withdrawn. Retain overtime = Base Pay[classification] × 90.93 % ÷ 36 × 2 (D-172-1).
+
 **Version:** 1.2
 **Created:** 2026-05
 **Last updated:** 2026-05 (canonical-rate refactor — only `kilometreRate`, `smallMealAllowance`, and `largeMealAllowance` remain editable; double meal is derived; spoilt, delayed, and standby-night meals all source `smallMealAllowance`; overnight cash is captured per-claim, not as a rate)
@@ -25,7 +32,7 @@ These rates have been confirmed from the FRV historical allowance sheets (FRV Al
 
 | Rate | Confirmed Value | Editable? | Source |
 |---|---|---|---|
-| Kilometre Rate (`kilometreRate`) | $1.20/km | ✅ Canonical | User-confirmed from FBEU EA, 2025; also in FRV allowance sheets |
+| Kilometre Rate (`kilometreRate`) | $1.50/km | ✅ Canonical | User-confirmed from FBEU EA, 2025; also in FRV allowance sheets |
 | Small Meal Allowance (`smallMealAllowance`) | $10.90 | ✅ Canonical | User-confirmed from FBEU EA, 2025; also in FRV allowance sheets. Also drives Spoilt, Delayed, Standby-Night, and Retain-small meals. |
 | Large Meal Allowance (`largeMealAllowance`) | $20.55 | ✅ Canonical | Confirmed FRV Allowances 2023FY, 2025FY, Current — flat rate, NOT 2× small. Also drives Retain-large and the derived double meal. |
 | Double Meal Allowance | $31.45 | ❌ Derived | Confirmed FRV Allowances 2023FY, 2025FY, Current. Computed at calculation time as `smallMealAllowance + largeMealAllowance`; there is no editable `doubleMealAllowance` rate. |
@@ -41,7 +48,7 @@ The canonical-rate refactor leaves only three editable rates in `lib/calculation
 
 | Rate Key | App Value | Source Status | EA Clause / Evidence Needed | Risk if Wrong | Testing Status |
 |---|---|---|---|---|---|
-| `kilometreRate` | $1.20/km | ✅ CONFIRMED | User-confirmed from FBEU EA 2025. Review at 1 July annually. | LOW — confirmed | ✅ Covered by validation scenarios |
+| `kilometreRate` | $1.50/km | ✅ CONFIRMED | User-confirmed from FBEU EA 2025. Review at 1 July annually. | LOW — confirmed | ✅ Covered by validation scenarios |
 
 ---
 
@@ -115,7 +122,7 @@ total_amount  = round(travel_amount + mealie_amount)
 
 | Check | Status | Notes |
 |---|---|---|
-| Travel: km × $1.20/km | ✅ Formula correct | Confirmed rate |
+| Travel: km × $1.50/km | ✅ Formula correct | Confirmed rate |
 | Meal: user self-selects none/small/large/double | ⚠️ ASSUMPTION | **EA likely specifies objective threshold (e.g. "if recall exceeds 4 hours, small meal applies"). Self-selection may not match award entitlement. Confirm the exact trigger conditions.** |
 | Large meal = $20.55 flat (NOT 2× small) | ✅ Confirmed | Confirmed FRV — see §2.2 |
 | Double meal = small + large = $31.45 (derived) | ✅ Confirmed | Sum matches FRV double meal value; ATO tax decomposition = 1 small + 1 large via `calcMealTaxComponents()` |
@@ -156,7 +163,7 @@ total_amount  = round(travel_amount + night_mealie)
 
 | Check | Status | Notes |
 |---|---|---|
-| Travel: km × $1.20/km | ✅ Formula correct | Confirmed rate |
+| Travel: km × $1.50/km | ✅ Formula correct | Confirmed rate |
 | Night meal sourced from `smallMealAllowance` ($10.90) | ⚠️ ASSUMED | Confirm EA clause for night meal value. |
 | Eligibility = Night shift AND arrival ≥ 19:00 AND not M&D | ⚠️ ASSUMED | Confirm against EA — particularly the 19:00 cutoff and the M&D exclusion |
 | Standby vs M&D — same travel rate? | ⚠️ ASSUMED | **App applies identical travel rates; M&D never carries a meal allowance. Confirm the EA does not have a separate M&D travel rate.** |
@@ -363,7 +370,7 @@ Run `node lib/calculations/validationScenarios.js` for the live pass/fail count.
 | Historical claim protection | ✅ Implemented correctly | No |
 | Rate snapshot on each claim | ✅ Implemented | No |
 | Canonical rate model (only `kilometreRate`, `smallMealAllowance`, `largeMealAllowance` editable) | ✅ Implemented | No — derived/sourced allowances now compute at calculation time |
-| km rate ($1.20/km) | ✅ Confirmed | No |
+| km rate ($1.50/km) | ✅ Confirmed | No |
 | Small meal ($10.90) | ✅ Confirmed | No |
 | Large meal ($20.55) | ✅ Confirmed (FRV records) | No |
 | Double meal ($31.45 derived) | ✅ Confirmed | No — derived = small + large |

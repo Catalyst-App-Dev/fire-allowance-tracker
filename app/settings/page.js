@@ -1,66 +1,56 @@
 'use client'
 
-// ─── Allowance Rate Settings Page ─────────────────────────────────────────────
-// Allows users to view and edit their personal allowance rates.
-// Falls back to DEFAULT_RATES when no user overrides exist.
-// All changes are persisted to fat.user_rates in Supabase.
+// ─── Allowance Rates Page (read-only) + Classification ────────────────────────
+// WORK-172: rates are GLOBAL and versioned (fat.rates / fat.rate_versions) and
+// are no longer user-editable — fat.user_rates is retired as a rate source.
+// This page shows the rates applicable today with their provenance, and lets
+// the member record their FRV classification history, which the overtime rule
+// (retain $) is keyed by. Adjustments to a single claim are made on that claim.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 import { useRates } from '@/lib/calculations/RatesContext'
-import { DEFAULT_RATES, RATE_FIELDS } from '@/lib/calculations/defaultRates'
+import { RATE_FIELDS } from '@/lib/calculations/defaultRates'
 import { calcDoubleMealAllowance } from '@/lib/calculations/engine'
+import { CLASSIFICATIONS, resolveRateVersion } from '@/lib/fat/rates/rateModel'
 import AppShell from '@/components/nav/AppShell'
 
-// ─── Shared styles ────────────────────────────────────────────────────────────
-
 const INPUT_STYLE = {
-  width: '100%',
-  padding: '10px 12px',
-  background: '#111',
-  border: '1px solid #333',
-  borderRadius: '8px',
-  color: '#e5e7eb',
-  fontSize: '0.9rem',
-  outline: 'none',
-  boxSizing: 'border-box',
+  width: '100%', padding: '10px 12px', background: '#111', border: '1px solid #333',
+  borderRadius: '8px', color: '#e5e7eb', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box',
 }
-
 const LABEL_STYLE = {
-  display: 'block',
-  fontSize: '0.78rem',
-  fontWeight: 600,
-  color: '#9ca3af',
-  textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-  marginBottom: '6px',
+  display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#9ca3af',
+  textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px',
 }
+const HELP_STYLE = { marginTop: '4px', fontSize: '0.74rem', color: '#6b7280' }
+const CARD = { background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: '16px', padding: '24px', marginBottom: '20px' }
+const H2 = { margin: '0 0 16px 0', fontSize: '0.95rem', fontWeight: 700, color: '#f9fafb' }
+const ROW = { display: 'flex', justifyContent: 'space-between', gap: '12px', padding: '10px 0', borderBottom: '1px solid #262626' }
+const BANNER = (rgb, color) => ({
+  marginBottom: '20px', background: `rgba(${rgb},0.1)`, border: `1px solid rgba(${rgb},0.3)`,
+  color, borderRadius: '10px', padding: '12px 16px', fontSize: '0.85rem', lineHeight: 1.5,
+})
 
-const HELP_STYLE = {
-  marginTop: '4px',
-  fontSize: '0.74rem',
-  color: '#6b7280',
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
+const labelFor = (code) => CLASSIFICATIONS.find((c) => c.code === code)?.label || code
+const today = () => new Date().toISOString().slice(0, 10)
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { rates, loading: ratesLoading, error: ratesError, saveRates, resetRates, loadRates } = useRates()
+  const {
+    rates, catalog, classificationHistory, loading, error,
+    loadRates, addClassification, removeClassification,
+  } = useRates()
 
   const [session, setSession] = useState(null)
   const [authLoading, setAuthLoading] = useState(true)
-
-  const [formValues, setFormValues] = useState({})
-  const [dirty, setDirty] = useState(false)
-  const [saving, setSaving] = useState(false)
-  const [resetting, setResetting] = useState(false)
-  const [successMessage, setSuccessMessage] = useState(null)
+  const [cls, setCls] = useState('lff')
+  const [effFrom, setEffFrom] = useState(today)
+  const [sourceRef, setSourceRef] = useState('')
+  const [busy, setBusy] = useState(false)
   const [formError, setFormError] = useState(null)
-
-  // ── Auth ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -71,295 +61,152 @@ export default function SettingsPage() {
     })
   }, [router, loadRates])
 
-  // Sync form values when rates load
-  useEffect(() => {
-    const vals = {}
-    for (const field of RATE_FIELDS) {
-      vals[field.key] = String(rates[field.key] ?? DEFAULT_RATES[field.key] ?? '')
-    }
-    setFormValues(vals)
-    setDirty(false)
-  }, [rates])
-
-  // ── Form handlers ─────────────────────────────────────────────────────────
-
-  const handleChange = (key, value) => {
-    setFormValues((prev) => ({ ...prev, [key]: value }))
-    setDirty(true)
-    setSuccessMessage(null)
-    setFormError(null)
-  }
-
-  const handleSave = async (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault()
     setFormError(null)
-
-    for (const field of RATE_FIELDS) {
-      const raw = formValues[field.key]
-      const num = Number(raw)
-      if (raw === '' || isNaN(num)) { setFormError(`"${field.label}" must be a number.`); return }
-      if (num < field.min) { setFormError(`"${field.label}" must be at least ${field.min}.`); return }
-      if (num > field.max) { setFormError(`"${field.label}" must be at most ${field.max}.`); return }
-    }
-
-    setSaving(true)
+    if (!effFrom) { setFormError('Effective-from date is required.'); return }
+    if (!sourceRef.trim()) { setFormError('Give the evidence for this classification (e.g. payslip pay number).'); return }
+    setBusy(true)
     try {
-      const newRates = {}
-      for (const field of RATE_FIELDS) {
-        newRates[field.key] = Number(formValues[field.key])
-      }
-      await saveRates(newRates)
-      setDirty(false)
-      setSuccessMessage('Rates saved. New claims will use these values.')
-      setTimeout(() => setSuccessMessage(null), 4000)
+      await addClassification({ classification: cls, effectiveFrom: effFrom, sourceRef: sourceRef.trim() })
+      setSourceRef('')
     } catch (err) {
-      setFormError(err.message || 'Failed to save rates. Please try again.')
+      setFormError(err.message || 'Could not record classification.')
     } finally {
-      setSaving(false)
+      setBusy(false)
     }
   }
 
-  const handleReset = async () => {
-    if (!window.confirm('Reset all rates back to system defaults? Your saved overrides will be deleted.')) return
-    setResetting(true)
-    setFormError(null)
-    try {
-      await resetRates()
-      setSuccessMessage('Rates reset to system defaults.')
-      setTimeout(() => setSuccessMessage(null), 4000)
-    } catch (err) {
-      setFormError(err.message || 'Failed to reset rates.')
-    } finally {
-      setResetting(false)
-    }
+  const handleRemove = async (id) => {
+    if (!window.confirm('Remove this classification entry? Claims already saved keep the rate they were calculated with.')) return
+    try { await removeClassification(id) } catch (err) { setFormError(err.message || 'Could not remove entry.') }
   }
-
-  // ── Guards ────────────────────────────────────────────────────────────────
 
   if (authLoading) {
     return (
-      <div style={{
-        minHeight: '100vh', background: '#0f0f0f',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: '#9ca3af', fontSize: '0.95rem',
-      }}>
+      <div style={{ minHeight: '100vh', background: '#0f0f0f', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af' }}>
         Loading…
       </div>
     )
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  const ot = rates.overtime
+  const date = today()
 
   return (
     <AppShell>
       <div style={{ color: '#e5e7eb', padding: '32px 20px', boxSizing: 'border-box' }}>
         <div style={{ maxWidth: '640px', margin: '0 auto' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#f9fafb' }}>Allowance Rates</h1>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: '#6b7280' }}>{session?.user?.email}</p>
+          </div>
 
-          {/* Header */}
-          <div style={{ marginBottom: '32px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                width: '40px', height: '40px', background: '#dc2626',
-                borderRadius: '10px', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', flexShrink: 0,
-              }}>
-                <svg width="22" height="22" fill="none" stroke="white" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+          <div style={BANNER('59,130,246', '#93c5fd')}>
+            Rates come from the enterprise agreement and Fair Work Commission orders, with effective dates.
+            Each claim uses the rates in force on its date, and saved claims never change.
+            To adjust one claim, edit that claim — rates are not editable per user.
+          </div>
+
+          {error && <div style={BANNER('239,68,68', '#f87171')}>{error}</div>}
+
+          {/* Classification history */}
+          <div style={CARD}>
+            <h2 style={H2}>Your FRV classification</h2>
+            <p style={{ ...HELP_STYLE, marginTop: 0, marginBottom: '12px' }}>
+              Overtime (retain) dollars are calculated from your classification's Base Pay
+              × 90.93 % ÷ 36 × double time. Without a classification the retain $ estimate is not shown.
+            </p>
+            {classificationHistory.length === 0 && (
+              <p style={{ color: '#f59e0b', fontSize: '0.85rem' }}>No classification recorded.</p>
+            )}
+            {classificationHistory.map((h) => (
+              <div key={h.id} style={ROW}>
+                <div>
+                  <div style={{ fontWeight: 600 }}>{labelFor(h.classification)}</div>
+                  <div style={HELP_STYLE}>From {String(h.effective_from).slice(0, 10)} · {h.source_ref}</div>
+                </div>
+                <button type="button" onClick={() => handleRemove(h.id)}
+                  style={{ background: 'none', border: '1px solid #444', color: '#9ca3af', borderRadius: '8px', padding: '4px 10px', cursor: 'pointer' }}>
+                  Remove
+                </button>
+              </div>
+            ))}
+            <form onSubmit={handleAdd} noValidate style={{ marginTop: '16px', display: 'grid', gap: '12px' }}>
+              <div>
+                <label style={LABEL_STYLE}>Classification</label>
+                <select value={cls} onChange={(e) => setCls(e.target.value)} style={{ ...INPUT_STYLE, cursor: 'pointer' }}>
+                  {CLASSIFICATIONS.map((c) => <option key={c.code} value={c.code}>{c.label}</option>)}
+                </select>
               </div>
               <div>
-                <h1 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: '#f9fafb' }}>
-                  Allowance Rates
-                </h1>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: '#6b7280' }}>
-                  {session?.user?.email}
+                <label style={LABEL_STYLE}>Effective from</label>
+                <input type="date" value={effFrom} onChange={(e) => setEffFrom(e.target.value)} style={INPUT_STYLE} />
+              </div>
+              <div>
+                <label style={LABEL_STYLE}>Evidence</label>
+                <input type="text" value={sourceRef} placeholder="e.g. Payslip 51.2024 — Leading Fire fighter"
+                  onChange={(e) => setSourceRef(e.target.value)} style={INPUT_STYLE} />
+              </div>
+              {formError && <div style={BANNER('239,68,68', '#f87171')}>{formError}</div>}
+              <button type="submit" disabled={busy}
+                style={{ background: '#dc2626', color: 'white', border: 'none', borderRadius: '8px', padding: '10px 16px', fontWeight: 600, cursor: busy ? 'wait' : 'pointer' }}>
+                {busy ? 'Saving…' : 'Add classification'}
+              </button>
+            </form>
+          </div>
+
+          {/* Overtime rule in force today */}
+          <div style={CARD}>
+            <h2 style={H2}>Overtime rate (today)</h2>
+            {ot?.ok ? (
+              <>
+                <div style={ROW}><span>Classification</span><span>{labelFor(ot.classification)}</span></div>
+                <div style={ROW}><span>Weekly Base Pay</span><span>${ot.components.basePayWeekly.value}</span></div>
+                <div style={ROW}><span>Overtime factor</span><span>{ot.components.factor.value}</span></div>
+                <div style={ROW}><span>Hourly divisor</span><span>{ot.components.divisor.value}</span></div>
+                <div style={ROW}><span>Hourly base</span><span>${ot.baseHourly}</span></div>
+                <div style={ROW}><span>Double time</span><span>${Number(ot.hourly).toFixed(2)}/h</span></div>
+                <p style={HELP_STYLE}>
+                  Base Pay excludes separately itemised allowances. The ÷36 divisor is reconciled to FRV payroll;
+                  results can differ from payslips by about a cent per line.
                 </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Info banner */}
-          <div style={{
-            marginBottom: '24px',
-            background: 'rgba(59,130,246,0.08)',
-            border: '1px solid rgba(59,130,246,0.2)',
-            color: '#93c5fd',
-            borderRadius: '10px',
-            padding: '14px 18px',
-            fontSize: '0.82rem',
-            lineHeight: 1.5,
-          }}>
-            <strong>Your personal rates</strong> — these values are used when auto-calculating new claims.
-            Existing claims are never changed when you update these. Review these rates each year, or whenever
-            your enterprise agreement or ATO rates change.
-          </div>
-
-          {ratesError && (
-            <div style={{
-              marginBottom: '20px',
-              background: 'rgba(239,68,68,0.1)',
-              border: '1px solid rgba(239,68,68,0.3)',
-              color: '#f87171',
-              borderRadius: '10px',
-              padding: '12px 16px',
-              fontSize: '0.875rem',
-            }}>
-              {ratesError}
-            </div>
-          )}
-
-          {successMessage && (
-            <div style={{
-              marginBottom: '20px',
-              background: 'rgba(34,197,94,0.1)',
-              border: '1px solid rgba(34,197,94,0.3)',
-              color: '#4ade80',
-              borderRadius: '10px',
-              padding: '12px 16px',
-              fontSize: '0.875rem', fontWeight: 500,
-            }}>
-              ✓ {successMessage}
-            </div>
-          )}
-
-          {/* Rates form */}
-          <form onSubmit={handleSave} noValidate>
-            <div style={{
-              background: '#1a1a1a', border: '1px solid #2a2a2a',
-              borderRadius: '16px', padding: '24px',
-            }}>
-              <h2 style={{ margin: '0 0 20px 0', fontSize: '0.95rem', fontWeight: 700, color: '#f9fafb' }}>
-                Allowance Rates (Workflow Test)
-              </h2>
-
-              {ratesLoading ? (
-                <p style={{ color: '#9ca3af', fontSize: '0.9rem' }}>Loading your rates…</p>
-              ) : (
-                <>
-                  {RATE_FIELDS.map((field) => (
-                    <div key={field.key} style={{ marginBottom: '20px' }}>
-                      <label style={LABEL_STYLE}>
-                        {field.label}
-                        <span style={{ marginLeft: '8px', color: '#6b7280', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
-                          ({field.unit})
-                        </span>
-                      </label>
-                      <div style={{ position: 'relative' }}>
-                        <span style={{
-                          position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
-                          color: '#6b7280', fontSize: '0.9rem', pointerEvents: 'none',
-                          display: field.unit === '$' || field.unit === '$/km' ? 'block' : 'none',
-                        }}>$</span>
-                        <input
-                          type="number"
-                          min={field.min}
-                          max={field.max}
-                          step={field.step}
-                          value={formValues[field.key] ?? ''}
-                          onChange={(e) => handleChange(field.key, e.target.value)}
-                          style={{
-                            ...INPUT_STYLE,
-                            paddingLeft: (field.unit === '$' || field.unit === '$/km') ? '26px' : '12px',
-                          }}
-                        />
-                      </div>
-                      <p style={HELP_STYLE}>{field.help}</p>
-                      <p style={{ ...HELP_STYLE, marginTop: '2px' }}>
-                        System default: ${DEFAULT_RATES[field.key]}
-                        {Number(formValues[field.key]) !== DEFAULT_RATES[field.key] && formValues[field.key] !== '' && (
-                          <span style={{ marginLeft: '8px', color: '#f59e0b' }}>✎ modified</span>
-                        )}
-                      </p>
-                    </div>
-                  ))}
-
-                  {/* Derived: Double Meal Allowance (read-only, = small + large) */}
-                  <div style={{ marginBottom: '4px' }}>
-                    <label style={LABEL_STYLE}>
-                      Double Meal Allowance
-                      <span style={{ marginLeft: '8px', color: '#6b7280', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>
-                        ($ — derived)
-                      </span>
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <span style={{
-                        position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
-                        color: '#6b7280', fontSize: '0.9rem', pointerEvents: 'none',
-                      }}>$</span>
-                      <input
-                        type="text"
-                        readOnly
-                        value={calcDoubleMealAllowance({
-                          smallMealAllowance: Number(formValues.smallMealAllowance) || 0,
-                          largeMealAllowance: Number(formValues.largeMealAllowance) || 0,
-                        }).toFixed(2)}
-                        style={{
-                          ...INPUT_STYLE,
-                          paddingLeft: '26px',
-                          background: '#0a0a0a',
-                          color: '#9ca3af',
-                          cursor: 'not-allowed',
-                        }}
-                      />
-                    </div>
-                    <p style={HELP_STYLE}>
-                      Always = Small Meal + Large Meal. Updates automatically when you change either rate above.
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-
-            {formError && (
-              <div style={{
-                marginTop: '16px',
-                background: 'rgba(239,68,68,0.1)',
-                border: '1px solid rgba(239,68,68,0.3)',
-                color: '#f87171',
-                borderRadius: '8px',
-                padding: '10px 14px',
-                fontSize: '0.85rem',
-              }}>
-                {formError}
-              </div>
+              </>
+            ) : (
+              <p style={{ color: '#f59e0b', fontSize: '0.85rem' }}>{ot?.message || 'Unavailable.'}</p>
             )}
+          </div>
 
-            {/* Actions */}
-            <div style={{ marginTop: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <button
-                type="submit"
-                disabled={saving || ratesLoading || !dirty}
-                style={{
-                  flex: 1, minWidth: '140px',
-                  padding: '11px 16px',
-                  background: (saving || !dirty) ? '#7f1d1d' : '#dc2626',
-                  border: 'none', borderRadius: '8px',
-                  color: 'white', cursor: (saving || !dirty) ? 'not-allowed' : 'pointer',
-                  fontSize: '0.9rem', fontWeight: 600,
-                  transition: 'background 0.15s',
-                }}
-              >
-                {saving ? 'Saving…' : 'Save Rates'}
-              </button>
-              <button
-                type="button"
-                onClick={handleReset}
-                disabled={resetting || ratesLoading}
-                style={{
-                  padding: '11px 16px',
-                  background: 'transparent',
-                  border: '1px solid #333', borderRadius: '8px',
-                  color: '#9ca3af', cursor: resetting ? 'not-allowed' : 'pointer',
-                  fontSize: '0.9rem', fontWeight: 600,
-                }}
-              >
-                {resetting ? 'Resetting…' : 'Reset to Defaults'}
-              </button>
-            </div>
-          </form>
-
+          {/* Allowance rates in force today */}
+          <div style={CARD}>
+            <h2 style={H2}>Allowances (today)</h2>
+            {loading ? <p style={{ color: '#9ca3af' }}>Loading…</p> : (
+              <>
+                {RATE_FIELDS.map((f) => {
+                  const r = resolveRateVersion(catalog, f.code, date)
+                  return (
+                    <div key={f.key} style={ROW}>
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{f.label}</div>
+                        <div style={HELP_STYLE}>{f.help}</div>
+                        {r && <div style={HELP_STYLE}>From {String(r.version.effective_from).slice(0, 10)} · {r.version.source_ref}</div>}
+                      </div>
+                      <span style={{ whiteSpace: 'nowrap' }}>
+                        {rates[f.key] == null ? '—' : `$${Number(rates[f.key]).toFixed(2)}`}{f.unit === '$/km' ? '/km' : ''}
+                      </span>
+                    </div>
+                  )
+                })}
+                <div style={ROW}>
+                  <div>
+                    <div style={{ fontWeight: 600 }}>Double Meal Allowance</div>
+                    <div style={HELP_STYLE}>Derived: Small Meal + Large Meal.</div>
+                  </div>
+                  <span>${calcDoubleMealAllowance(rates).toFixed(2)}</span>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </AppShell>
