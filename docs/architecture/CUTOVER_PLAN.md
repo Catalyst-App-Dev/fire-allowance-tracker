@@ -55,6 +55,13 @@ provenance** columns; a canonical representation of **migrated historical paymen
 and every constraint, index and RLS policy the transform requires. Ledgered migrations,
 DEV first. **No PROD mutation** (PROD application belongs to C4's approval).
 
+**Status: complete in DEV (WORK-189, 2026-10-05).** Migration
+`20261005121500_fat_work189_c1_cutover_readiness`; contract
+[`C1_CUTOVER_CONTRACT.md`](C1_CUTOVER_CONTRACT.md) (claim-number scope, July–June FY,
+batch/source provenance and idempotent identity, source-row ledger with named exclusions,
+payment-state representation for C3, provenance guard and RLS). PROD application is part of
+C4's separate approval. C2 and C3 are **not** started by C1.
+
 ### C2 — Deterministic transform-copy tool + DEV rehearsal
 Idempotent transform from prototype logical events (`claim_groups` + per-type parent and
 auto-child rows) into `operational_claims` + the correct detail row + 0..N
@@ -146,8 +153,8 @@ window, announcement and mechanism are fixed in the C4 Issue before Production a
 
 | Step | Issue | Blocked by |
 |---|---|---|
-| C1 | [WORK-189](https://linear.app/catalyst-app-development/issue/WORK-189) — C1 Canonical schema/contract readiness | WORK-172 |
-| C2 | [WORK-190](https://linear.app/catalyst-app-development/issue/WORK-190) — C2 Transform-copy tool + DEV rehearsal | C1, WORK-173 |
+| C1 | [WORK-189](https://linear.app/catalyst-app-development/issue/WORK-189) — C1 Canonical schema/contract readiness (**DEV complete**) | WORK-172 (done) |
+| C2 | [WORK-190](https://linear.app/catalyst-app-development/issue/WORK-190) — C2 Transform-copy tool + DEV rehearsal (owns WORK-173 generator parity) | C1 (done), WORK-173 (done) |
 | C3 | [WORK-191](https://linear.app/catalyst-app-development/issue/WORK-191) — C3 Historical payment-state migration | C2 |
 | C4 | [WORK-192](https://linear.app/catalyst-app-development/issue/WORK-192) — C4 PROD transform-copy under write freeze | C3, WORK-165/166/167 |
 | C5 | [WORK-193](https://linear.app/catalyst-app-development/issue/WORK-193) — C5 Parity sign-off + canonical cutover | C4 |
