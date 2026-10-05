@@ -266,9 +266,11 @@ describe('calcRetainMealEligibility — missing inputs', () => {
 })
 
 // ─── calcRetainClaim — Maint Stn N/N dollar generation ───────────────────────
-// Retain $ = round(hours × base × 2, 2), base = round(BasePay × 0.9093 ÷ 36, 2)
-// from the versioned rate/rule model (WORK-172). LFF base = $50.51/h. Payslip
-// 4.00h = $404.09; the model's $404.08 is within the accepted ±$0.01.
+// Retain $ estimate = round(hours × base × 2, 2), base = round(BasePay × 0.9093
+// ÷ 36, 2) from the versioned rate/rule model (WORK-172) under the FAT best-fit
+// estimate convention (WORK-246 — not FRV payroll's formula). LFF base =
+// $50.51/h. Payslip 4.00h = $404.09; the estimate $404.08 is accepted estimate
+// error and is not fitted away.
 
 const OT_RATES = {
   ...RATES,
@@ -281,12 +283,12 @@ describe('calcRetainClaim — Maint Stn N/N dollar derivation', () => {
     expect(OT_RATES.overtime.hourly).toBe('101.0200')
   })
 
-  test('mandatory 4.00h minimum → Maint Stn N/N $404.08 (payslip $404.09, ±$0.01)', () => {
+  test('mandatory 4.00h minimum → Maint Stn N/N estimate $404.08 (payslip $404.09)', () => {
     const r = calcRetainClaim({ shift: 'Day', bookedOffTime: '19:00', overnightCash: 0 }, OT_RATES)
     expect(r.generatedHours).toBeCloseTo(4.00, 2)
     expect(r.retainHourlyRate).toBeCloseTo(101.02, 4)
     expect(r.retainAmount).toBeCloseTo(404.08, 2)
-    expect(Math.abs(r.retainAmount - 404.09)).toBeLessThanOrEqual(0.01)
+    expect(r.retainAmount).not.toBe(404.09)       // an estimate, not the payslip figure
   })
 
   test('1.25h derives $126.28', () => {

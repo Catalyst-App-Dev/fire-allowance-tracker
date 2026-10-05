@@ -6,7 +6,9 @@
 > **Code:** [`lib/fat/rates/rateModel.js`](../../lib/fat/rates/rateModel.js) (pure lookup and arithmetic),
 > [`lib/calculations/ratesForDate.js`](../../lib/calculations/ratesForDate.js) (prototype adapter),
 > [`lib/fat/engine/context.js`](../../lib/fat/engine/context.js) (`ctx.overtimeLookup` for canonical generators).
-> **Decision record:** Linear WORK-172 (design `e3f01997`, corrections `8516344a` / `c0f76c81`, operator decision D-172-1 `4f129331`).
+> **Decision record:** Linear WORK-172 (design `e3f01997`, corrections `8516344a` / `c0f76c81`, operator decision D-172-1 `4f129331`);
+> overtime estimate convention and payslip reconciliation: Linear **WORK-246** (investigation `31e2b7e9`, operator Option A `f8ce703b`, gate `bcc7537f`).
+> WORK-246 supersedes the D-172-1 wording that called the cents-rounded base "payroll's rate boundary" with a "±$0.01 accepted" tolerance.
 
 ## 1. Principles
 
@@ -37,18 +39,26 @@
 - An exact classification match is preferred, else the NULL-classification version.
 - If nothing applies, the result is **fail closed**: no estimate.
 
-## 3. Overtime rule (`overtime.enterprise_rate.v1`)
+## 3. Overtime rule (`overtime.enterprise_rate.v1`) and the FAT estimate convention
+
+The industrial rule (90.93 % of the enterprise rate, × the overtime multiplier) is turned into
+dollars under an **operator-approved FAT best-fit estimate convention**
+(`fat.overtime_estimate.cents_base.v1`, WORK-246 `f8ce703b`):
 
 ```
-base   = round_half_up( BasePayWeekly[classification] × 0.9093 ÷ 36 , 2 )   -- $/h, single time
-line   = round_half_up( hours × base × multiplier , 2 )                      -- payable/display line
+base     = round_half_up( BasePayWeekly[classification on claim date] × 0.9093 ÷ 36 , 2 )   -- $/h, single time
+estimate = round_half_up( hours × base × multiplier , 2 )                                  -- estimated line
 ```
+
+**This is a FAT estimate, not FRV payroll's formula.** FRV's internal payroll formula is not
+known, and the EBA does not state a divisor. Every dollar figure derived from this rule is an
+estimate, and every snapshot says so (`is_estimate`, `estimate_convention`, `evidence`).
 
 | Component | Code | Value | Evidence class | Source |
 |---|---|---|---|---|
 | Weekly enterprise **Base Pay** | `enterprise_base_pay_weekly` (per classification) | LFF 1,999.60; SO 2,260.73; … | `fwc_order` | PR765587 Annexure A, Division A "Current Wage", in force since the 2.5 % variation wef 1 Jan 2021 ([2023] FWC 2020 [16]) |
 | Overtime factor | `overtime_rate_factor` | 0.9093 | `industrial_instrument` | FRV EBA 2020: "In all cases when calculating overtime the rate to be used will be 90.93% of the enterprise rate" (inherited MFB/UFU 2010 cl 96.2) |
-| Hourly divisor | `overtime_hourly_divisor` | 36 | **`payroll_reconciled`** | Operator decision D-172-1. **Not** stated in the EBA, and **not** derived from the 38/42-hour roster clause |
+| Hourly divisor | `overtime_hourly_divisor` | 36 | **`payroll_reconciled`** (an approximation) | Operator decision D-172-1. **Not** stated in the EBA, and **not** derived from the 38/42-hour roster clause. The nearest simple divisor to payroll behaviour; it does not reproduce payslips exactly (WORK-246) |
 | Double time | `double_time_multiplier` | 2 | `industrial_instrument` | EBA cl 128.1 (overtime), 128.2 (recall minimum 4 h), 128.5 (retained 60 min or more: minimum 4 h) |
 
 **Base Pay rule.**
@@ -57,16 +67,47 @@ line   = round_half_up( hours × base × multiplier , 2 )                      -
 
 **Roster context.** The EBA sets 38 ordinary hours, rostered 42, with 2 h paid as overtime and 2 h accrued leave. This is context only; it is not the divisor's source.
 
+**Evidence classes (kept distinct).**
+
+| Part | Class |
+|---|---|
+| 90.93 % factor; overtime multiplier (×2) | industrial instrument (authoritative) |
+| Weekly Base Pay per classification | FWC order (authoritative) |
+| ÷36 | payroll-reconciled approximation / inference |
+| Rounding the single-time hourly base to cents | **FAT estimate convention**, chosen by the operator because it best fits the available payslips without inventing an unsupported hidden rate or divisor |
+
 **Rounding contract.**
 - Components are stored exactly, and arithmetic is exact (BigInt rationals; no floating point).
-- The single-time base is published at cents. That is payroll's rate boundary.
-- Each line is rounded half-up at cents.
+- The single-time hourly base is rounded half-up to cents. This is the **FAT convention**, not a published FRV rate and not FRV payroll's method.
+- Each estimated line is rounded half-up at cents.
 - The unrounded base (`base_hourly_exact`) is snapshotted alongside.
 
-**Accepted reconciliation tolerance (LFF payslips).**
-- 4 h Maint Stn: model **$404.08** vs payslip $404.09. **−$0.01 accepted** (D-172-1).
-- 0.5 h Standby&Dismi, 0.75 h Fire Call, and single-time Excess Travel lines: exact.
-- 12.25 h Callback-Ops: −$0.03. Same cause: payroll's internal base is about $50.5112, which the instrument does not expose. Disclosed, not fitted away.
+**What the payslips show (payroll-reconciled inference, WORK-246 `31e2b7e9`).** Across all
+28 applicable Base-Pay-basis lines on 19 LFF payslips, every single- and double-time line fits
+one hourly rate of ≈ $50.5112–50.5116 (held to at least 4 dp), rounded once per line.
+FRV payroll therefore does **not** use a cents-rounded $50.51 base. No simple formula on
+$1,999.60 × 0.9093 ÷ 36 reproduces every line; this convention is the best fit.
+
+**Accepted estimate error (LFF payslips).** These residuals are estimate error. They are
+deliberately **not** fitted away (no hidden rate or divisor).
+
+| Line | Estimate | Payslip | Difference |
+|---|---|---|---|
+| 4 h double time (Maint Stn, Fire Call; 11 lines) | $404.08 | $404.09 | −$0.01 each |
+| 12.25 h double time (Callback-Ops) | $1,237.50 | $1,237.53 | −$0.03 |
+| 0.25 / 0.5 / 0.75 h double time; 0.25–2.5 h single-time Excess Travel (16 lines) | as payslip | | 0 |
+| **All 28 lines** | 15 exact | | **net −$0.15** |
+
+The matrix is a test (`__tests__/rate-model.test.mjs`).
+
+**Classification and promotion.**
+- The classification is resolved **on the claim date** from `fat.member_classifications`
+  (latest `effective_from` ≤ claim date, inclusive). Then the Base Pay version for that
+  classification and date is resolved.
+- A promotion is recorded in `/settings` as a new effective-dated row. Claims before its
+  effective date keep the prior classification and rate; claims on or after it use the new ones.
+- Saved claims never change: they store their amount and the frozen snapshot.
+- There is no hard-coded rate. LFF $50.51 is only what the convention yields for LFF Base Pay $1,999.60.
 
 ## 4. Seeded version history
 
@@ -87,10 +128,19 @@ PR765587 makes the new rates payable "from the first pay period after 16 June 20
 An overtime-derived entitlement or prototype row freezes `overtimeSnapshot()`:
 
 ```json
-{ "rule_id": "overtime.enterprise_rate.v1", "classification": "lff",
+{ "rule_id": "overtime.enterprise_rate.v1", "is_estimate": true,
+  "estimate_convention": { "id": "fat.overtime_estimate.cents_base.v1", "kind": "fat_estimate_convention",
+                           "decision_ref": "Linear WORK-246 comment f8ce703b (operator Option A, 2026-10-05)",
+                           "formula": "…", "note": "Best fit to available FRV payslips; not FRV payroll's published or internal formula. …" },
+  "classification": "lff",
   "base_hourly_exact": "50.506563333333", "base_hourly": "50.51",
   "multiplier": "2", "hourly": "101.0200",
   "formula": "round_half_up(hours × round_half_up(base_pay_weekly × factor ÷ divisor, 2) × multiplier, 2)",
+  "evidence": { "factor": "industrial_instrument", "multiplier": "industrial_instrument",
+                "base_pay_weekly": "fwc_order", "divisor": "payroll_reconciled_approximation",
+                "base_cents_rounding": "fat_estimate_convention",
+                "versions": { "basePayWeekly": "fwc_order", "factor": "industrial_instrument",
+                              "divisor": "payroll_reconciled", "multiplier": "industrial_instrument" } },
   "components": { "basePayWeekly": {"rate_version_id": "…", "code": "…", "value": "1999.6", "effective_from": "2021-01-01", "classification": "lff", "source_kind": "fwc_order"},
                   "factor": {…}, "divisor": {…}, "multiplier": {…} } }
 ```

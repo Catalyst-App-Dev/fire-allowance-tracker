@@ -61,7 +61,7 @@ console.log(`Total: ${pass + fail}   Pass: ${pass}   Fail: ${fail}`)
 console.log()
 console.log(`── Maint Stn N/N $ derivation (LFF base $${overtime.baseHourly}/h × ${overtime.multiplier}) ──`)
 const dollarCases = [
-  { shift: 'Day', bookedOffTime: '19:00', expectHours: 4.00, expectAmount: 404.08, label: '4.00h → Maint Stn N/N $404.08 (payslip $404.09; ±$0.01 accepted)' },
+  { shift: 'Day', bookedOffTime: '19:00', expectHours: 4.00, expectAmount: 404.08, label: '4.00h → Maint Stn N/N estimate $404.08 (payslip $404.09; FAT estimate convention, WORK-246)' },
   { shift: 'Day', bookedOffTime: '22:15', expectHours: 4.25, expectAmount: 429.34, label: '4.25h → Maint Stn N/N $429.34' },
 ]
 for (const { shift, bookedOffTime, expectHours, expectAmount, label } of dollarCases) {

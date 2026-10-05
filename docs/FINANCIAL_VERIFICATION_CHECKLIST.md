@@ -5,7 +5,8 @@
 > ([`architecture/RATE_RULE_MODEL.md`](architecture/RATE_RULE_MODEL.md)); `fat.user_rates`
 > is no longer a rate source. The km rate is the industrial Division A Motor Vehicle /
 > Mileage Allowance — **$1.50/km from 2023-06-17 (PR765587)**; the workbook $1.20 is
-> withdrawn. Retain overtime = Base Pay[classification] × 90.93 % ÷ 36 × 2 (D-172-1).
+> withdrawn. Retain overtime estimate = round(Base Pay[classification on claim date] × 90.93 % ÷ 36, 2) × 2 — the FAT
+> best-fit estimate convention (WORK-246), not FRV payroll's formula; ÷36 is payroll-reconciled (D-172-1).
 
 **Version:** 1.2
 **Created:** 2026-05

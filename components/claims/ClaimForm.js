@@ -497,8 +497,10 @@ function RetainInputs({ values, onChange, date, mealEligibility, retainBreakdown
       </div>
 
       {/* Hours-first calculated entitlement panel. Hours are the primary value;
-          the Maint Stn N/N dollar amount is derived from the canonical FRV
-          overtime rate (fixed award rate, not user-editable). */}
+          the Maint Stn N/N dollar amount is an ESTIMATE from the versioned
+          overtime rule for the claim date's classification, under the FAT
+          best-fit estimate convention (WORK-246; not user-editable). The
+          payslip may differ by a few cents. */}
       <div style={{
         ...FIELD,
         padding: '12px 14px', borderRadius: '8px',
@@ -515,7 +517,7 @@ function RetainInputs({ values, onChange, date, mealEligibility, retainBreakdown
             {!hasHours ? 'no retain hours'
               : retainBreakdown?.retainRateAvailable === false
                 ? `$ estimate unavailable — ${retainBreakdown.retainRateMessage}`
-                : `= $${dollarValue.toFixed(2)} at $${hourlyRate.toFixed(2)}/h`}
+                : `= $${dollarValue.toFixed(2)} at $${hourlyRate.toFixed(2)}/h (estimate)`}
           </div>
         </div>
         {explanation && (
