@@ -1,0 +1,15 @@
+{
+  "plan_a_sha256": "fb95375765bb3fd7bcf425008d3753715f4139009a602b8055b8a26c68c00e1f",
+  "claims": 8,
+  "entitlements": 12,
+  "ledger": 25,
+  "adjustments": 2,
+  "details": {
+    "recall_details": 1,
+    "retain_details": 2,
+    "standby_details": 1,
+    "muster_dismiss_details": 1,
+    "spoilt_meal_details": 2,
+    "delayed_meal_details": 1
+  }
+}
