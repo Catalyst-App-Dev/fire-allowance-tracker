@@ -92,7 +92,7 @@ Operational Claim → Versioned entitlement engine → 0..N Generated Entitlemen
   - Excess Travel is time, never km × rate. Fare/transport/mileage reimbursement is a
     separate entitlement (no double counting): basis is cost **in excess of** the ordinary
     home→rostered journey (distance form `max(0, d(home,T) − d(home,R))`); mileage only
-    where cl. 85.9 applies (Schedule 4 rate; values per WORK-172). Implementation:
+    where cl. 85.9 applies (Division A Motor Vehicle / Mileage rate history in `fat.rate_versions`, `travel_per_km`; see `RATE_RULE_MODEL.md`). Implementation:
     WORK-173. Evidence record: WORK-170.
 - **Recall excess travel — D9d:** an entitlement is generated only when an authoritative
   rule establishes one; never a cosmetic $0 row.
@@ -104,7 +104,8 @@ Operational Claim → Versioned entitlement engine → 0..N Generated Entitlemen
 - Global, versioned rate/rule tables keyed by entitlement/classification context, with
   effective dates.
 - Full internal precision; the applicable version is snapshotted on each entitlement.
-- No magic constant (e.g. `101.02`) as architectural truth.
+- No magic constant (e.g. `101.02`) as architectural truth. Implemented contract:
+  [`RATE_RULE_MODEL.md`](RATE_RULE_MODEL.md) (WORK-172).
 - Explicit **per-claim** manual override with audit/provenance. Persistent arbitrary
   per-user rate overrides are **not** the primary model.
 - A payslip is reconciliation evidence, never the canonical source of entitlement hours.

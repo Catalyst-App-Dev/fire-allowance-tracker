@@ -103,14 +103,22 @@ the Recall "Excess Travel" child is always **$0** — `ClaimsContext.js:125` rea
 
 ## Current calculation/rate behaviour
 
-- Rates = code `DEFAULT_RATES` (`lib/calculations/defaultRates.js`: km 1.20, small meal
-  10.90, large meal 20.55) overridden per user by `fat.user_rates` (`/settings`, labelled
-  "Rates").
-- Retain = generated hours × fixed `RETAIN_OVERTIME_HOURLY_RATE = 101.0225`; stored in
-  `fat.retain.retain_rate_used numeric(8,2)` → **101.02** (precision loss; the jsonb
-  `rates_snapshot` keeps full precision). `user_rates.retain_hourly_rate` is orphaned.
-- Canonical `fat.rates` / `rate_versions` are seeded (travel_per_km, small_meal,
-  large_meal, standby_hours, md_hours) and read only by the canonical engine (SB/MD).
+- **Rates (WORK-172; DEV after migration `20261005060000`, PROD pending):** global versioned
+  `fat.rates` / `fat.rate_versions` with classification, provenance and withdrawal, resolved
+  per claim date by `RatesContext.ratesForDate` (prototype) and `ctx.rateLookup` /
+  `ctx.overtimeLookup` (canonical). See [`RATE_RULE_MODEL.md`](RATE_RULE_MODEL.md).
+  `fat.user_rates` is no longer read or written (table retained until C7/Neon); `/settings` is
+  read-only plus classification history. `DEFAULT_RATES` is an offline fallback only
+  (km 1.50, small meal 10.90, large meal 20.55).
+- Retain $ = round(hours × round(BasePay[classification] × 0.9093 ÷ 36, 2) × 2, 2); fails
+  closed (hours only) without a recorded classification. `retain_rate_used` is unconstrained
+  `numeric`; the full version snapshot is in `calculation_inputs.retainRate`. LFF 4 h =
+  $404.08 vs payslip $404.09 (accepted ±$0.01, D-172-1).
+- km = `travel_per_km` industrial history (1.37 → 1.50 from 2023-06-17, PR765587); the
+  workbook 1.20 version is withdrawn. Small/large meal remain workbook-provenance codes
+  (industrial `meal_allowance` / `spoilt_meal_allowance` seeded; mapping is WORK-173).
+- Canonical entitlement overrides are audited in `fat.entitlement_overrides` (reason required;
+  generation fields immutable).
 - Stored amounts are static historical records (not recalculated).
 - Financial year: July–June, labelled `NNNNFY`, auto-created per user
   (`lib/fy/FinancialYearContext.js`, `fat.financial_years`).
@@ -282,7 +290,7 @@ promotable as-is).
 | Canonical generators recall / retain / spoilt / delayed return `[]` | STUBBED |
 | SB/MD canonical mirror only; prototype primary | PARTIAL / HYBRID |
 | Recall Excess Travel child always $0 | DEFECT |
-| Retain rate truncated to 2 dp | DEFECT |
+| Retain rate truncated to 2 dp | RESOLVED in DEV (WORK-172); PROD pending |
 | Two payment truths (SB/MD) | DEFECT (architectural) |
 | `fat.payment_components` phantom write | LEGACY / UNCERTAIN |
 | Payments, payslip import, OCR | IMPLEMENTED BUT DARK |

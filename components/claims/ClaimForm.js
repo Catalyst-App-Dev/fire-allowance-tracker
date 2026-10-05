@@ -11,7 +11,7 @@
 //   - financialYearId prop wired into addClaim for FY + numbering
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useClaims } from '@/lib/claims/ClaimsContext'
 import { useRates } from '@/lib/calculations/RatesContext'
 import { CLAIM_TYPE_ORDER, CLAIM_TYPE_LABELS } from '@/lib/claims/claimTypes'
@@ -200,7 +200,9 @@ function CalcPreview({ breakdown, rates, onShowCalc }) {
     const hrs    = breakdown.generatedHours.toFixed(2)
     const rate   = (breakdown.retainHourlyRate ?? 0).toFixed(2)
     const amount = (breakdown.retainAmount ?? 0).toFixed(2)
-    lines.push(`Maint stn N/N: ${hrs} h × $${rate}/h = $${amount}`)
+    lines.push(breakdown.retainRateAvailable === false
+      ? `Maint stn N/N: ${hrs} h ($ estimate unavailable — ${breakdown.retainRateMessage})`
+      : `Maint stn N/N: ${hrs} h × $${rate}/h = $${amount}`)
   }
   if (breakdown.overnightCash > 0) lines.push('Overnight: $' + breakdown.overnightCash.toFixed(2))
 
@@ -510,7 +512,10 @@ function RetainInputs({ values, onChange, date, mealEligibility, retainBreakdown
             {hours.toFixed(2)} h
           </div>
           <div style={{ fontSize: '0.85rem', color: hasHours ? '#d1d5db' : '#6b7280' }}>
-            {hasHours ? `= $${dollarValue.toFixed(2)} at $${hourlyRate.toFixed(2)}/h` : 'no retain hours'}
+            {!hasHours ? 'no retain hours'
+              : retainBreakdown?.retainRateAvailable === false
+                ? `$ estimate unavailable — ${retainBreakdown.retainRateMessage}`
+                : `= $${dollarValue.toFixed(2)} at $${hourlyRate.toFixed(2)}/h`}
           </div>
         </div>
         {explanation && (
@@ -834,13 +839,15 @@ function getTodayLocal() {
 
 export default function ClaimForm({ userId, financialYearId, onSuccess, onCancel, initialClaimType }) {
   const { addClaim } = useClaims()
-  const { rates }    = useRates()
+  const { ratesForDate } = useRates()
 
   // Quick-action prefill: open the form directly on the requested type.
   const startingType = CLAIM_TYPE_ORDER.includes(initialClaimType) ? initialClaimType : 'retain'
 
   const [claimType, setClaimType]           = useState(startingType)
   const [date, setDate]                     = useState(getTodayLocal)
+  // Rates resolve per claim date (versioned rate/rule model, WORK-172).
+  const rates = useMemo(() => ratesForDate(date), [ratesForDate, date])
   const [fields, setFields]                 = useState(() => ({ ...DEFAULTS[startingType] }))
   const [breakdown, setBreakdown]           = useState(null)
   const [adjustedAmount, setAdjustedAmount] = useState(null)
