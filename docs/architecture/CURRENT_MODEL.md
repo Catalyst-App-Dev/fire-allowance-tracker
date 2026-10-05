@@ -123,9 +123,11 @@ the Recall "Excess Travel" child is always **$0** — `ClaimsContext.js:125` rea
   `fat.station_distances`.
 - Recall rostered → recall station leg: FRV Index matrix (`fat.travel_matrix_cells`).
 - Standby: Google km for reimbursement + FRV matrix hours (`fat.travel_matrix_lookup`).
-- M&D petty-cash km = `max(0, Home→Rostered − Home→M&D)`.
+- M&D petty-cash km = `max(0, Home→Rostered − Home→M&D)` — **reversed** relative to EBA
+  cl. 85.8.1 (excess over home→rostered); correction owned by WORK-173 (WORK-170 rule).
 - **No excess-travel eligibility gate** for Standby/M&D (canonical generators emit when
-  rostered ≠ target; prototype children pay km × rate).
+  rostered ≠ target; prototype children pay km × rate). The confirmed rule (WORK-170;
+  PROJECTED_MODEL D3) is not yet implemented — WORK-173.
 - Stations: 83 rows, explicit ids; Training Academy FS60; Spring Street id 100
   (non-fire location). Platoon: deterministic 8-day A/A/D/D/C/C/B/B rotation anchored
   2026-01-03 (`lib/platoon/resolveOperationalPlatoon.js`).

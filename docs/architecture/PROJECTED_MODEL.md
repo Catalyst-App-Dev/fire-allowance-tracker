@@ -74,11 +74,26 @@ Operational Claim → Versioned entitlement engine → 0..N Generated Entitlemen
 - Each entitlement carries: rule identity and explanation, rate/rule **version snapshot**,
   generated quantity and unit, optional derived estimate, payment route, status, and an
   audited manual-override trail (original, override, reason, actor, time).
-- **Excess travel (SB / M&D) — D3:** eligibility must come from an **authoritative,
-  evidence-derived rule** and the generator **fails closed** (no entitlement) where the
-  rule or required data is unavailable. The exact substantive rule is **not yet known**;
-  the historical "home→target > home→rostered" formula is *not* approved as fact. Rule
-  verification is owned by WORK-170.
+- **Excess travel (SB / M&D) — D3 (rule confirmed by WORK-170, 2026-10-05):** source is
+  FRV EBA 2020 Div A cl. 85.8.1 (M&D / detailed elsewhere) and cl. 85.8.4 (intra-shift
+  move). Let R = rostered location, T = duty/standby/M&D location,
+  `bands = ceil(radius_km(R, T) / 6)` (straight-line "radius", 6 km or part thereof).
+  - **Eligibility (both):** `d(home, T) > d(home, R)` — strictly further from residence;
+    equal or closer → no Excess Travel.
+  - **M&D:** 1.0 h overtime allowance always; Excess Travel `0.25 h × bands × 2`
+    (15 min each way) at ordinary rate, payslip hours.
+  - **Standby, remained at T until shift end (85.8.4(b)):** 0.5 h overtime allowance;
+    Excess Travel `0.25 h × bands` (one way). **Returned to R during the shift
+    (85.8.4(a)):** no Excess Travel time and no 0.5 h — reasonable-transport
+    reimbursement only.
+  - **Fail closed:** no Excess Travel entitlement when R, T, the residence/FFH
+    determination, the radius, or (Standby) the remained/returned fact is unavailable;
+    base allowances unaffected.
+  - Excess Travel is time, never km × rate. Fare/transport/mileage reimbursement is a
+    separate entitlement (no double counting): basis is cost **in excess of** the ordinary
+    home→rostered journey (distance form `max(0, d(home,T) − d(home,R))`); mileage only
+    where cl. 85.9 applies (Schedule 4 rate; values per WORK-172). Implementation:
+    WORK-173. Evidence record: WORK-170.
 - **Recall excess travel — D9d:** an entitlement is generated only when an authoritative
   rule establishes one; never a cosmetic $0 row.
 - **Retain — D4:** hours-first; any displayed estimate derives from the applicable
@@ -98,8 +113,9 @@ Operational Claim → Versioned entitlement engine → 0..N Generated Entitlemen
 
 Retained: Google Directions (server key) with routing fallback for home↔station distances;
 FRV Index matrices for station-to-station km and hours; per-claim distance snapshots.
-Excess-travel eligibility per D3. Inputs required by the verified rule (e.g. any
-home→target distance) are captured as claim facts.
+Excess-travel eligibility per D3. Inputs required by the verified rule are captured as
+claim facts: R, T, residence location (or a reliable further-from-home determination),
+`radius_km(R, T)`, and for Standby whether the member remained at T until shift end.
 
 ## Payment and reconciliation model (D6)
 

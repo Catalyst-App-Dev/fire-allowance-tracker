@@ -37,7 +37,7 @@ Provenance keys: **E1** = WORK-164 comment `e848ae43` (Current evidence), **E2**
 | G10 | Prototype per-type + parent/child storage primary → canonical primary via verified transform-copy; prototype read-only then retired | APG | migration | High | WORK-171 (plan, [`CUTOVER_PLAN.md`](CUTOVER_PLAN.md)); execution: WORK-189 (C1), WORK-190 (C2), WORK-192 (C4), WORK-193 (C5), WORK-194 (C6), WORK-195 (C7) | Yes (data migration) | No | E1, D1/D2/D9c |
 | G11 | Code constants + per-user `user_rates`; retain constant truncated → global versioned rate/rule model, full precision, audited per-claim override | APG | data / architecture | Med | [WORK-172](https://linear.app/catalyst-app-development/issue/WORK-172) (Backlog) | Later | Yes (rate values / effective dates) | E1, D4/D9e |
 | G12 | Fake $0 Recall Excess Travel child → none; real entitlement only under a verified rule | SEC/DEF | product | Low | [WORK-174](https://linear.app/catalyst-app-development/issue/WORK-174) (Backlog); rule part in WORK-173 | Later (runtime promotion) | No | E1, D9d |
-| G13 | SB/M&D excess travel ungated → evidence-derived rule, fail closed | EVID | product | Med | [WORK-170](https://linear.app/catalyst-app-development/issue/WORK-170) (Backlog); implementation in WORK-173 | No | **Yes — exact rule unknown** | E2, D3 |
+| G13 | SB/M&D excess travel ungated → evidence-derived rule, fail closed. **Rule established 2026-10-05 (WORK-170):** EBA 2020 Div A cl. 85.8.1 / 85.8.4 — strictly-further-from-residence gate; `0.25 h × ceil(radius(R,T)/6)` one way (Standby, remained to shift end) or ×2 (M&D); fail closed (see PROJECTED_MODEL D3). Implementation (generators + correcting the reversed M&D petty-cash km) remains open | APG | product | Med | [WORK-170](https://linear.app/catalyst-app-development/issue/WORK-170) (rule — completed); implementation [WORK-173](https://linear.app/catalyst-app-development/issue/WORK-173) | No | No (rule confirmed by operator) | E2, D3 |
 | G14 | ~~DEV friends/replication layer (untracked, cross-user risk) → removed~~ **Closed 2026-10-01:** removed from DEV (ledger `20261001232645`); never present in PROD | SEC/DEF | security | — | [WORK-169](https://linear.app/catalyst-app-development/issue/WORK-169) (completed) | No (DEV only; nothing to promote) | No | E1, D5 |
 | G15 | Payments dark; reconciliation sees SB/MD only → enabled only after prerequisites | APG | product | High if early | [WORK-175](https://linear.app/catalyst-app-development/issue/WORK-175) (Backlog, blocked by WORK-165, WORK-166) | Yes | Operator go decision | E1, D6 |
 | G16 | OCR dark, PII/retention unresolved → policy first; OCR off outside DEV until approved | EVID | product / security | Med | [WORK-176](https://linear.app/catalyst-app-development/issue/WORK-176) (Backlog) | Yes (to enable) | **Yes** | E1, D7 |
@@ -65,7 +65,7 @@ Provenance keys: **E1** = WORK-164 comment `e848ae43` (Current evidence), **E2**
 Tier 0 — independent, can start now
   WORK-169 (G14, done)  WORK-180 (G18)  WORK-181 (G19)  WORK-182 (G21)  WORK-183 (G23)
   WORK-184 (G24)  WORK-185 (G20)  WORK-187 (G26)  WORK-174 (G12)
-  WORK-170 (G13 evidence)  WORK-176 (G16 policy)
+  WORK-170 (G13 evidence, done)  WORK-176 (G16 policy)
   WORK-177 / 178 / 179 (G17 — do not depend on Phase 3; must respect isolation)
         │
 Tier 1 — PROD parity & security (precedes every tier below)
@@ -76,7 +76,7 @@ Tier 2 — revised target & rules
   WORK-171 (G09/G10 plan)  WORK-172 (G11)
         │
 Tier 3 — generators
-  WORK-173 (G08; SB/M&D gating needs WORK-170)
+  WORK-173 (G08; SB/M&D gating per confirmed WORK-170 rule)
         │
 Tier 4 — cutover execution (WORK-189…195 = C1–C7, see CUTOVER_PLAN.md): transform-copy +
           parity, single payment truth, prototype read-only → retired
@@ -91,7 +91,6 @@ complete.**
 
 ## Residual open questions (owned, not hidden)
 
-- Exact SB/M&D excess-travel eligibility rule — WORK-170.
 - Authoritative current rate values and effective dates — WORK-172.
 - Payslip PII/retention policy — WORK-176.
 - Sheets cadence/target, calendar event scope — WORK-178, WORK-179.
