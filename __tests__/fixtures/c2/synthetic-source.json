@@ -1,0 +1,548 @@
+{
+ "description": "C2 synthetic prototype source (WORK-190): representative events for all six claim types. Placeholders {{OWNER}} {{FY2026}} {{STN_A}} {{STN_B}} are bound at rehearsal time. evidence_class = synthetic; never persisted.",
+ "source": {
+  "claim_groups": [
+   {
+    "claim_number": 1,
+    "claim_type": "recalls",
+    "created_at": "2026-06-03T09:00:00+00:00",
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000001",
+    "label": "recalls #1",
+    "notes": "Recall to FS B",
+    "parent_status": "Pending",
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "claim_number": 1,
+    "claim_type": "retain",
+    "created_at": "2026-06-04T09:00:00+00:00",
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000002",
+    "label": "retain #1",
+    "notes": null,
+    "parent_status": "Pending",
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "claim_number": 2,
+    "claim_type": "retain",
+    "created_at": "2026-06-08T09:00:00+00:00",
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000003",
+    "label": "retain #2",
+    "notes": null,
+    "parent_status": "Pending",
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "claim_number": 1,
+    "claim_type": "standby",
+    "created_at": "2026-06-05T09:00:00+00:00",
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000004",
+    "label": "standby #1",
+    "notes": null,
+    "parent_status": "Pending",
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "claim_number": 1,
+    "claim_type": "md",
+    "created_at": "2026-06-06T09:00:00+00:00",
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000005",
+    "label": "md #1",
+    "notes": null,
+    "parent_status": "Pending",
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "claim_number": 1,
+    "claim_type": "spoilt",
+    "created_at": "2026-06-09T09:00:00+00:00",
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000006",
+    "label": "spoilt #1",
+    "notes": null,
+    "parent_status": "Pending",
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "claim_number": 1,
+    "claim_type": "delayed_meal",
+    "created_at": "2026-06-10T09:00:00+00:00",
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000007",
+    "label": "delayed_meal #1",
+    "notes": null,
+    "parent_status": "Pending",
+    "user_id": "{{OWNER}}"
+   }
+  ],
+  "recalls": [
+   {
+    "adjusted_amount": null,
+    "arrived": "08:00",
+    "calculation_inputs": {
+     "arrivalTime": "08:00",
+     "bookedOffTime": "13:30",
+     "distHomeKm": 20,
+     "distStnKm": 5,
+     "largeMealCount": 1,
+     "mealEntitlement": "double",
+     "mealTier": "large+small",
+     "notified": false,
+     "shift": "Day",
+     "smallMealCount": 1,
+     "totalKm": 50
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000001",
+    "claim_number": 1,
+    "created_at": "2026-06-03T09:05:00+00:00",
+    "date": "2026-06-03",
+    "dist_home_km": 20,
+    "dist_stn_km": 5,
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000101",
+    "mealie_amount": 31.45,
+    "notes": "Pump relief",
+    "rates_snapshot": {
+     "kilometreRate": 1.5,
+     "kmRate": 1.5,
+     "largeMealAllowance": 20.55,
+     "smallMealAllowance": 10.9
+    },
+    "recall_stn_id": "{{STN_B}}",
+    "rostered_stn_id": "{{STN_A}}",
+    "shift": "Day",
+    "total_amount": 106.45,
+    "travel_amount": 75,
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "adjusted_amount": null,
+    "calculation_inputs": {
+     "autoChild": "callback_ops",
+     "distHomeKm": 20,
+     "distStnKm": 5
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000001",
+    "claim_number": null,
+    "created_at": "2026-06-03T09:05:00+00:00",
+    "date": "2026-06-03",
+    "dist_home_km": 20,
+    "dist_stn_km": 5,
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000102",
+    "mealie_amount": 0,
+    "total_amount": 75,
+    "travel_amount": 75,
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "adjusted_amount": null,
+    "calculation_inputs": {
+     "autoChild": "excess_travel",
+     "distStnKm": 5
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000001",
+    "claim_number": null,
+    "created_at": "2026-06-03T09:05:00+00:00",
+    "date": "2026-06-03",
+    "dist_home_km": 0,
+    "dist_stn_km": 5,
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000103",
+    "mealie_amount": 0,
+    "total_amount": 0,
+    "travel_amount": 0,
+    "user_id": "{{OWNER}}"
+   }
+  ],
+  "retain": [
+   {
+    "adjusted_amount": null,
+    "booked_off_time": "22:01",
+    "calculation_inputs": {
+     "bookedOffTime": "22:01",
+     "generatedHours": 4.25,
+     "largeMealCount": 1,
+     "mealTier": "large+small",
+     "retainRate": {
+      "rule_id": "overtime.enterprise_rate.v1"
+     },
+     "retainRulePath": "post-flat-end",
+     "shift": "Day",
+     "smallMealCount": 2
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000002",
+    "claim_number": 1,
+    "created_at": "2026-06-04T09:05:00+00:00",
+    "date": "2026-06-04",
+    "financial_year_id": "{{FY2026}}",
+    "generated_hours": 4.25,
+    "id": "c2f00000-0000-4000-8000-000000000201",
+    "overnight_cash": 0,
+    "rates_snapshot": {
+     "kilometreRate": 1.5,
+     "kmRate": 1.5,
+     "largeMealAllowance": 20.55,
+     "smallMealAllowance": 10.9
+    },
+    "retain_amount": 429.35,
+    "retain_rate_used": 101.02,
+    "shift": "Day",
+    "station_id": "{{STN_A}}",
+    "total_amount": 471.7,
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "adjusted_amount": null,
+    "booked_off_time": "22:01",
+    "calculation_inputs": {
+     "autoChild": "maint_stn_nn",
+     "generatedHours": 4.25,
+     "retainRate": {
+      "rule_id": "overtime.enterprise_rate.v1"
+     }
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000002",
+    "claim_number": null,
+    "created_at": "2026-06-04T09:05:00+00:00",
+    "date": "2026-06-04",
+    "financial_year_id": "{{FY2026}}",
+    "generated_hours": 4.25,
+    "id": "c2f00000-0000-4000-8000-000000000202",
+    "overnight_cash": 0,
+    "retain_amount": 429.35,
+    "retain_rate_used": 101.02,
+    "shift": "Day",
+    "total_amount": 429.35,
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "adjusted_amount": null,
+    "booked_off_time": "19:05",
+    "calculation_inputs": {
+     "bookedOffTime": "19:05",
+     "generatedHours": 4.0,
+     "largeMealCount": 1,
+     "mealTier": "large",
+     "shift": "Day",
+     "smallMealCount": 0
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000003",
+    "claim_number": 2,
+    "created_at": "2026-06-08T09:05:00+00:00",
+    "date": "2026-06-08",
+    "financial_year_id": "{{FY2026}}",
+    "generated_hours": 4.0,
+    "id": "c2f00000-0000-4000-8000-000000000301",
+    "overnight_cash": 0,
+    "rates_snapshot": {
+     "kilometreRate": 1.5,
+     "kmRate": 1.5,
+     "largeMealAllowance": 20.55,
+     "smallMealAllowance": 10.9
+    },
+    "retain_amount": 404.08,
+    "retain_rate_used": 101.02,
+    "shift": "Day",
+    "station_id": "{{STN_A}}",
+    "total_amount": 424.63,
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "adjusted_amount": null,
+    "booked_off_time": "19:05",
+    "calculation_inputs": {
+     "autoChild": "maint_stn_nn",
+     "generatedHours": 4.0
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000003",
+    "claim_number": null,
+    "created_at": "2026-06-08T09:05:00+00:00",
+    "date": "2026-06-08",
+    "financial_year_id": "{{FY2026}}",
+    "generated_hours": 4.0,
+    "id": "c2f00000-0000-4000-8000-000000000302",
+    "overnight_cash": 0,
+    "retain_amount": 404.08,
+    "shift": "Day",
+    "total_amount": 404.08,
+    "user_id": "{{OWNER}}"
+   }
+  ],
+  "spoilt_meals": [
+   {
+    "adjusted_amount": null,
+    "calculation_inputs": {
+     "autoChild": "petty_cash_meal",
+     "largeMealCount": 1,
+     "mealEntitlement": "double",
+     "mealTier": "large+small",
+     "smallMealCount": 1
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000001",
+    "claim_number": null,
+    "created_at": "2026-06-03T09:05:00+00:00",
+    "date": "2026-06-03",
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000104",
+    "meal_amount": 31.45,
+    "meal_type": "Double",
+    "shift": "Day",
+    "total_amount": 31.45,
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "adjusted_amount": 40.0,
+    "calculation_inputs": {
+     "autoChild": "retain_meal",
+     "largeMealCount": 1,
+     "mealTier": "large+small",
+     "smallMealCount": 2
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000002",
+    "claim_number": null,
+    "created_at": "2026-06-04T09:05:00+00:00",
+    "date": "2026-06-04",
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000203",
+    "meal_amount": 42.35,
+    "meal_type": "Double",
+    "shift": "Day",
+    "total_amount": 42.35,
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "adjusted_amount": null,
+    "calculation_inputs": {
+     "autoChild": "retain_meal",
+     "largeMealCount": 1,
+     "mealTier": "large",
+     "smallMealCount": 0
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000003",
+    "claim_number": null,
+    "created_at": "2026-06-08T09:05:00+00:00",
+    "date": "2026-06-08",
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000303",
+    "meal_amount": 20.55,
+    "meal_type": "Large",
+    "shift": "Day",
+    "total_amount": 20.55,
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "adjusted_amount": null,
+    "calculation_inputs": {
+     "autoChild": "standby_small_meal"
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000004",
+    "claim_number": null,
+    "created_at": "2026-06-05T09:05:00+00:00",
+    "date": "2026-06-05",
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000403",
+    "meal_amount": 10.9,
+    "meal_type": "Spoilt",
+    "shift": "Night",
+    "total_amount": 10.9,
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "adjusted_amount": null,
+    "calculation_inputs": {
+     "firecallNumber": "12345",
+     "mealType": "Spoilt",
+     "shift": "Day"
+    },
+    "call_number": "12345",
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000006",
+    "claim_number": 1,
+    "created_at": "2026-06-09T09:05:00+00:00",
+    "date": "2026-06-09",
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000601",
+    "meal_amount": 10.9,
+    "meal_interrupted": "12:35",
+    "meal_type": "Spoilt",
+    "rates_snapshot": {
+     "kilometreRate": 1.5,
+     "kmRate": 1.5,
+     "largeMealAllowance": 20.55,
+     "smallMealAllowance": 10.9
+    },
+    "shift": "Day",
+    "station_id": "{{STN_A}}",
+    "total_amount": 10.9,
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "adjusted_amount": null,
+    "calculation_inputs": {
+     "firecallNumber": "23456",
+     "mealType": "Delayed",
+     "shift": "Day"
+    },
+    "call_number": "23456",
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000007",
+    "claim_number": 1,
+    "created_at": "2026-06-10T09:05:00+00:00",
+    "date": "2026-06-10",
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000701",
+    "meal_amount": 10.9,
+    "meal_type": "Delayed",
+    "rates_snapshot": {
+     "kilometreRate": 1.5,
+     "kmRate": 1.5,
+     "largeMealAllowance": 20.55,
+     "smallMealAllowance": 10.9
+    },
+    "shift": "Day",
+    "station_id": "{{STN_A}}",
+    "total_amount": 10.9,
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "adjusted_amount": 12.0,
+    "calculation_inputs": {},
+    "claim_group_id": null,
+    "claim_number": 2,
+    "created_at": "2026-05-20T09:05:00+00:00",
+    "date": "2026-05-20",
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000801",
+    "meal_amount": 10.9,
+    "meal_type": "Spoilt / Meal",
+    "rates_snapshot": {
+     "kilometreRate": 1.5,
+     "kmRate": 1.5,
+     "largeMealAllowance": 20.55,
+     "smallMealAllowance": 10.9
+    },
+    "shift": "Night",
+    "station_id": "{{STN_A}}",
+    "total_amount": 10.9,
+    "user_id": "{{OWNER}}"
+   }
+  ],
+  "standby": [
+   {
+    "adjusted_amount": null,
+    "arrived_time": "1930",
+    "calculation_inputs": {
+     "arrivedTime": "1930",
+     "autoChild": "standby_and_dismi",
+     "distKm": 30,
+     "shift": "Night",
+     "standbyType": "Standby"
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000004",
+    "claim_number": 1,
+    "created_at": "2026-06-05T09:05:00+00:00",
+    "date": "2026-06-05",
+    "dist_km": 0,
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000401",
+    "matrix_hours": 0.5,
+    "night_mealie": 0,
+    "rates_snapshot": {
+     "kilometreRate": 1.5,
+     "kmRate": 1.5,
+     "largeMealAllowance": 20.55,
+     "smallMealAllowance": 10.9
+    },
+    "rostered_stn_id": "{{STN_A}}",
+    "shift": "Night",
+    "standby_stn_id": "{{STN_B}}",
+    "standby_type": "Standby",
+    "total_amount": 0,
+    "travel_amount": 0,
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "adjusted_amount": null,
+    "calculation_inputs": {
+     "autoChild": "standby_excess_travel",
+     "distKm": 30
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000004",
+    "claim_number": null,
+    "created_at": "2026-06-05T09:05:00+00:00",
+    "date": "2026-06-05",
+    "dist_km": 30,
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000402",
+    "night_mealie": 0,
+    "shift": "Night",
+    "standby_type": "Standby",
+    "total_amount": 45,
+    "travel_amount": 45,
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "adjusted_amount": null,
+    "arrived_time": "0745",
+    "calculation_inputs": {
+     "autoChild": "md_event",
+     "distKm": 15,
+     "homeToMdKm": 10,
+     "homeToRosteredKm": 25,
+     "mdRule": "home_rostered_minus_home_md",
+     "payableKm": 15,
+     "standbyType": "M&D"
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000005",
+    "claim_number": 1,
+    "created_at": "2026-06-06T09:05:00+00:00",
+    "date": "2026-06-06",
+    "dist_km": 0,
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000501",
+    "night_mealie": 0,
+    "rates_snapshot": {
+     "kilometreRate": 1.5,
+     "kmRate": 1.5,
+     "largeMealAllowance": 20.55,
+     "smallMealAllowance": 10.9
+    },
+    "rostered_stn_id": "{{STN_A}}",
+    "shift": "Day",
+    "standby_stn_id": "{{STN_B}}",
+    "standby_type": "M&D",
+    "total_amount": 0,
+    "travel_amount": 0,
+    "user_id": "{{OWNER}}"
+   },
+   {
+    "adjusted_amount": null,
+    "calculation_inputs": {
+     "autoChild": "standby_excess_travel",
+     "distKm": 15,
+     "homeToMdKm": 10,
+     "homeToRosteredKm": 25,
+     "mdRule": "home_rostered_minus_home_md",
+     "payableKm": 15
+    },
+    "claim_group_id": "c2f00000-0000-4000-8000-000000000005",
+    "claim_number": null,
+    "created_at": "2026-06-06T09:05:00+00:00",
+    "date": "2026-06-06",
+    "dist_km": 15,
+    "financial_year_id": "{{FY2026}}",
+    "id": "c2f00000-0000-4000-8000-000000000502",
+    "night_mealie": 0,
+    "shift": "Day",
+    "standby_type": "M&D",
+    "total_amount": 22.5,
+    "travel_amount": 22.5,
+    "user_id": "{{OWNER}}"
+   }
+  ]
+ }
+}
