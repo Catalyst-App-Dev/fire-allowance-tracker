@@ -69,6 +69,10 @@ auto-child rows) into `operational_claims` + the correct detail row + 0..N
 Preserves source ids/provenance, claim number, FY, dates, notes, snapshots and manual
 adjustments. Emits a **machine-readable parity report** covering every gate below.
 Rehearsed repeatedly in DEV. Does not revive dual-write.
+Delivered by WORK-190: contract [`C2_TRANSFORM_CONTRACT.md`](C2_TRANSFORM_CONTRACT.md), tool
+`lib/fat/migration/c2/` + `scripts/c2-transform.mjs`, DEV rehearsal evidence in
+`docs/evidence/WORK-190/`. Evaluates acceptance gates 1–5 and 7; gate 6 stays with C3, 8 with
+C4, 9 with C5. No schema change.
 
 ### C3 — Historical payment-state migration (G09)
 Maps prototype payment state into auditable canonical payment records, allocations and
