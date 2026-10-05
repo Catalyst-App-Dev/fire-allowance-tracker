@@ -124,6 +124,13 @@ the Recall "Excess Travel" child is always **$0** — `ClaimsContext.js:125` rea
 - Financial year: July–June, labelled `NNNNFY`, auto-created per user
   (`lib/fy/FinancialYearContext.js`, `fat.financial_years`).
 - Claim numbers: user-visible, from `fat.increment_claim_sequence`.
+- **Canonical claim number / FY / migration provenance (WORK-189, C1; DEV after migration
+  `20261005121500`, PROD pending C4):** `operational_claims.claim_number` +
+  `financial_year_id` (unique per owner/FY/type; owner-bound FY), July–June CHECK on
+  `fat.financial_years`, batch + prototype lineage on claims / entitlements / payment records,
+  `fat.migration_batches`, `fat.migration_source_rows`, provenance guard trigger. No canonical
+  row carries migration data yet (C2/C3 not run). Contract:
+  [`C1_CUTOVER_CONTRACT.md`](C1_CUTOVER_CONTRACT.md).
 
 ## Current travel behaviour
 
@@ -216,7 +223,7 @@ functions, RLS on every table.**
 
 ## Current DEV database
 
-Supabase `kctctvpobbizhkiqkgqw` (shared multi-app). Schema `fat`: **34 tables, 16
+Supabase `kctctvpobbizhkiqkgqw` (shared multi-app). Schema `fat`: **36 tables (34 + 2 from WORK-189), 16
 functions, RLS on every table.**
 
 - Canonical 01–22 applied (`canonical_*`, `fat_*_15…18`, `user_feature_flags`,
@@ -224,6 +231,11 @@ functions, RLS on every table.**
   event trigger `fat_enforce_no_public_execute`.
 - Data (counts): auth.users 2, `operational_claims` 4, `claim_entitlements` 9,
   `reconciliation_audit` 4, prototype claim tables mostly empty.
+- C1 cutover-readiness migration `20261005121500_fat_work189_c1_cutover_readiness`
+  (WORK-189): applied and verified in DEV (ledger version and evidence on WORK-189). Adds
+  `fat.migration_batches` and `fat.migration_source_rows` (service-role only, RLS, deny
+  policy); the abandoned-branch `operational_claims.prototype_claim_group_id` /
+  `prototype_source` columns are adopted as transform lineage.
 - **Friends/replication layer removed** (WORK-169): the untracked layer from ledger
   `20260515223705` (3 empty tables, 10 SECURITY DEFINER functions, no app code) was
   dropped by ledger `20261001232645 work169_drop_fat_friends_replication_v1`. Package and
