@@ -242,8 +242,19 @@ promotable as-is).
   no `fat` function is PUBLIC- or anon-executable; event trigger
   `fat_enforce_no_public_execute` enabled. `authenticated`/`service_role` table grants
   unchanged (least-privilege trim: WORK-237).
-- PROD: `public.fat_set_updated_at` and `public.rls_auto_enable` SECURITY DEFINER,
-  anon-executable; `fat.increment_claim_sequence` executable by authenticated.
+- `fat.increment_claim_sequence`, both projects (WORK-167, verified 2026-10-05; PROD
+  ledger `20261005003435 work167_fat_claim_sequence_caller_check`, DEV `20261004234921`):
+  SECURITY INVOKER, `search_path = ''`, and rejects (`42501`) any call where `auth.uid()`
+  is null or differs from `p_user_id`; the `claim_sequences` RLS policy `users_manage_own`
+  applies. A signed-in user can advance only their own claim sequence. EXECUTE:
+  `authenticated`, `service_role` only. No `fat` SECURITY DEFINER function is executable by
+  an API role. **Neon (GOV-481):** carry the invariant "a claim sequence advances only for
+  the authenticated caller" with identity from the server-side session, not by porting
+  `auth.uid()`.
+- PROD `public` (not `fat`): `public.fat_set_updated_at` (legacy FAT trigger function, PROD
+  only; retired with WORK-168) and `public.rls_auto_enable` (shared/platform `ensure_rls`
+  event trigger, not FAT-owned) remain SECURITY DEFINER and anon-executable per the
+  advisors.
 - PROD legacy `fire_allowance_tracker` (WORK-144, verified 2026-10-04): anon/authenticated
   hold direct `arwdDxtm` grants on all 11 tables and `fire_allowance_claims` has `true` CRUD
   policies, but the schema is **not externally reachable**: PostgREST exposes only `public,
