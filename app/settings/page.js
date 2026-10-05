@@ -114,8 +114,10 @@ export default function SettingsPage() {
           <div style={CARD}>
             <h2 style={H2}>Your FRV classification</h2>
             <p style={{ ...HELP_STYLE, marginTop: 0, marginBottom: '12px' }}>
-              Overtime (retain) dollars are calculated from your classification's Base Pay
-              × 90.93 % ÷ 36 × double time. Without a classification the retain $ estimate is not shown.
+              Overtime (retain) dollars are an estimate: your classification's Base Pay on the claim date
+              × 90.93 % ÷ 36, rounded to cents, × double time. Your payslip may differ by a few cents.
+              Record a promotion here with its effective date — earlier claims keep the earlier rate.
+              Without a classification the retain $ estimate is not shown.
             </p>
             {classificationHistory.length === 0 && (
               <p style={{ color: '#f59e0b', fontSize: '0.85rem' }}>No classification recorded.</p>

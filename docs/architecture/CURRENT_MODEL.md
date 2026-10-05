@@ -112,8 +112,9 @@ the Recall "Excess Travel" child is always **$0** — `ClaimsContext.js:125` rea
   (km 1.50, small meal 10.90, large meal 20.55).
 - Retain $ = round(hours × round(BasePay[classification] × 0.9093 ÷ 36, 2) × 2, 2); fails
   closed (hours only) without a recorded classification. `retain_rate_used` is unconstrained
-  `numeric`; the full version snapshot is in `calculation_inputs.retainRate`. LFF 4 h =
-  $404.08 vs payslip $404.09 (accepted ±$0.01, D-172-1).
+  `numeric`; the full version snapshot is in `calculation_inputs.retainRate`. The cents-rounded
+  base is the FAT best-fit **estimate convention** (WORK-246), not FRV payroll's formula. LFF 4 h
+  estimate $404.08 vs payslip $404.09; 12.25 h $1,237.50 vs $1,237.53 (accepted estimate error).
 - km = `travel_per_km` industrial history (1.37 → 1.50 from 2023-06-17, PR765587); the
   workbook 1.20 version is withdrawn. Small/large meal remain workbook-provenance codes
   (industrial `meal_allowance` / `spoilt_meal_allowance` seeded; mapping is WORK-173).
