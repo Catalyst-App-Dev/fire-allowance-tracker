@@ -124,7 +124,8 @@ test('provenance and lineage: deterministic ids, batch-independent identity, a l
   }
   const leg = p.ledger.find((l) => l.source_table === 'recalls' && l.disposition === 'claim')
   assert.equal(leg.source_checksum.length, 64)
-  assert.ok(leg.source_snapshot.calculation_inputs)
+  assert.equal(leg.source_snapshot, null) // only exclusions carry a snapshot (C1 contract § 4)
+  assert.ok(p.ledger.filter((l) => l.disposition === 'excluded').every((l) => l.source_snapshot?.calculation_inputs))
 })
 
 test('fake $0 Recall Excess Travel is excluded with its snapshot, never an entitlement', () => {
