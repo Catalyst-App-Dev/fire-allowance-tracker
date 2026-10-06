@@ -52,6 +52,24 @@ database:
   # DEV and PROD are separate Supabase projects — see CLAUDE.md §7.
   # The `fat` schema must remain exposed to PostgREST.
 
+# Application-owned backend boundary (Governance v2 data.application-backend,
+# schema catalyst/backend@1; WORK-254). N0: FAT still runs on the legacy shared
+# Supabase projects, which stay the one authoritative PROD with writes open.
+# The legacy boundary is FAT's own `fat` schema in each project, including the
+# prototype claim tables (recalls/retain/standby/spoilt_meals/claim_groups/
+# user_rates) that are the C2/C3 migration source.
+backend:
+  schema: catalyst/backend@1
+  state: legacy-shared
+  legacy:
+    provider: supabase
+    projects:
+      dev: kctctvpobbizhkiqkgqw
+      prod: wgcqzamuspuqpedqasbc
+    schema: fat
+    role: authoritative
+    writes: open
+
 # GOV-409 renamed the Applications team (key APP) to Workshop (key WORK).
 # Historical APP-<n> identifiers still resolve to the same Issues.
 linear:
