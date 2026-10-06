@@ -1,8 +1,8 @@
 {
   "schema": "fat.work256.neon-dev-rls-proof/v1",
-  "at": "2026-10-06T10:28:14.933Z",
-  "identityA": "456de064-7467-4008-ac92-1b3a31b6b49c",
-  "identityB": "0809b559-5175-4d75-aae0-69dce5430eec",
+  "at": "2026-10-06T11:18:04.302Z",
+  "identityA": "911074b1-69bd-471a-b386-ace9bc20a508",
+  "identityB": "97583d9c-a1ef-457a-9085-cb960d393251",
   "passed": 20,
   "failed": 0,
   "checks": [
@@ -207,7 +207,7 @@
       "ok": true,
       "detail": [
         {
-          "id": "456de064-7467-4008-ac92-1b3a31b6b49c"
+          "id": "911074b1-69bd-471a-b386-ace9bc20a508"
         }
       ]
     },

@@ -4,7 +4,7 @@
 // (lib/server/db.js) against Neon `dev`. Synthetic identities only.
 //
 //   node --conditions=react-server scripts/neon-dev-rls-proof.mjs <identityA> <identityB>
-//   (DATABASE_URL = fat_app_server, DATABASE_SERVICE_URL = fat_identity_provisioner)
+//   (FAT_DATABASE_URL = fat_app_server, FAT_DATABASE_SERVICE_URL = fat_identity_provisioner)
 //
 // Proves: unset identity sees no owner-scoped row; A sees only A, B only B;
 // A cannot update/delete/insert B's rows; fat_app cannot read identity links or
@@ -82,7 +82,7 @@ const res = await expectDenied(() => withMemberTx(idA, ({ query }) => query("sel
 check('fat_app cannot resolve identities (42501)', res.denied && res.code === '42501', res)
 
 // 5. Login roles hold nothing without SET ROLE, and cannot cross roles.
-for (const [name, url, other] of [['fat_app_server', process.env.DATABASE_URL, 'fat_service'], ['fat_identity_provisioner', process.env.DATABASE_SERVICE_URL, 'fat_app']]) {
+for (const [name, url, other] of [['fat_app_server', process.env.FAT_DATABASE_URL, 'fat_service'], ['fat_identity_provisioner', process.env.FAT_DATABASE_SERVICE_URL, 'fat_app']]) {
   const pool = new Pool({ connectionString: url })
   const c = await pool.connect()
   try {

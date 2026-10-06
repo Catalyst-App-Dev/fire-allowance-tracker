@@ -32,7 +32,7 @@ Every member request is `POST /api/fat/<op>` → `memberRoute`:
    `/api/auth/[...path]`). No session → 401.
 3. Resolve the FAT app identity (`identity.js`, §4). A browser-supplied UUID is never used —
    operation inputs never carry an owner id.
-4. `withMemberTx`: one transaction on `DATABASE_URL` (`fat_app_server`) →
+4. `withMemberTx`: one transaction on `FAT_DATABASE_URL` (`fat_app_server`) →
    `SET LOCAL ROLE fat_app` → `set_config('fat.app_user_id', <identity>, true)` → operation →
    commit. RLS on every owner-scoped table does the rest.
 5. 42501 maps to 403; validation errors to 400; anything else to 500 without detail.
@@ -147,13 +147,20 @@ cutover preparation, the routing switch, every Production action, and:
 
 ## 8. Environment variables (server-only unless noted)
 
-| Name | Value |
-|---|---|
-| `FAT_BACKEND` | `neon` (literal) — build-time; inlined as `NEXT_PUBLIC_FAT_BACKEND` |
-| `DATABASE_URL` | Postgres URL for `fat_app_server` on the `dev` endpoint |
-| `DATABASE_SERVICE_URL` | Postgres URL for `fat_identity_provisioner` on the `dev` endpoint |
-| `NEON_AUTH_BASE_URL` | Neon Auth URL of the `dev` branch |
-| `NEON_AUTH_COOKIE_SECRET` | random secret, ≥ 32 characters |
+FAT convention: every application-specific variable carries the `FAT_` prefix. The environment
+is the **Vercel scope**, never part of the key — e.g. `FAT_DATABASE_URL — Preview` and, later,
+`FAT_DATABASE_URL — Production` are the same key in two scopes. WORK-256 sets **Preview only**
+(branch `task/WORK-256-neon-dev-app-auth`); no Production variable exists or is created.
 
-None are `NEXT_PUBLIC_*`; the client-bundle scan finds no credential, secret, role name or
-variable name. Role passwords are set by the operator in the Neon console and never committed.
+| Key — scope | Value |
+|---|---|
+| `FAT_BACKEND — Preview` | `neon` (literal) — build-time; inlined as `NEXT_PUBLIC_FAT_BACKEND` |
+| `FAT_DATABASE_URL — Preview` | Postgres URL for `fat_app_server` on the Neon `dev` endpoint |
+| `FAT_DATABASE_SERVICE_URL — Preview` | Postgres URL for `fat_identity_provisioner` on the Neon `dev` endpoint |
+| `FAT_NEON_AUTH_BASE_URL — Preview` | Neon Auth URL of the `dev` branch (not secret) |
+| `FAT_NEON_AUTH_COOKIE_SECRET — Preview` | random secret, ≥ 32 characters (enforced at startup) |
+
+Only `FAT_BACKEND` reaches the browser (as the literal `neon`/`supabase`); the four others are read
+only by `lib/server/` (`__tests__/neon-env-contract.test.mjs` pins this). The client-bundle scan
+finds no credential, secret, role name or variable name. Role passwords are set by the operator in
+the Neon console and never committed.

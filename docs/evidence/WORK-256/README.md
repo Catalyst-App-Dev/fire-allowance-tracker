@@ -77,7 +77,7 @@ needs `playwright-core`, which is not an app dependency.
 ## Static checks
 
 - Unit tests: `node --test __tests__/*.test.mjs __tests__/*.test.js`.
-  - This branch: 169 tests, 165 pass.
+  - This branch: 172 tests, 168 pass (includes the 3 env-contract tests).
   - Baseline `origin/dev`: 146 tests, 142 pass.
   - The same four Jest-style files fail identically on both, because the node runner cannot run
     them: `grouped-claims`, `platoon-resolver`, `recall-retain-entitlements`, `travel-format`.
@@ -97,3 +97,11 @@ needs `playwright-core`, which is not an app dependency.
 ## Neon `main` (read-only, 2026-10-06)
 
 Schemas: `public` only. 0 user relations. No `fat*` roles. Neon Auth not enabled (404).
+
+## Environment-variable naming (PROMPT #31)
+
+The server variables follow the FAT `FAT_` prefix convention: `FAT_DATABASE_URL`,
+`FAT_DATABASE_SERVICE_URL`, `FAT_NEON_AUTH_BASE_URL` and `FAT_NEON_AUTH_COOKIE_SECRET`, alongside the
+unchanged `FAT_BACKEND`. The environment is the Vercel scope (e.g. `FAT_DATABASE_URL — Preview`),
+never part of the key. Every proof in this directory was re-run after the rename against the
+same Neon `dev` target; `__tests__/neon-env-contract.test.mjs` pins the names.

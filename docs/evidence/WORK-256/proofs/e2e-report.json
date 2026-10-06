@@ -1,13 +1,13 @@
 {
   "schema": "fat.work256.neon-dev-e2e/v1",
   "base": "http://localhost:3001",
-  "run": "muwjdds6",
-  "at": "2026-10-06T10:31:08.661Z",
+  "run": "muwl11go",
+  "at": "2026-10-06T11:17:32.200Z",
   "passed": 87,
   "failed": 0,
   "facts": {
-    "identityA": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
-    "identityB": "f98fc224-95d8-4ab9-a44e-d64ddaf76f21",
+    "identityA": "911074b1-69bd-471a-b386-ace9bc20a508",
+    "identityB": "97583d9c-a1ef-457a-9085-cb960d393251",
     "fyA": "2027FY",
     "created": {
       "recalls": {
@@ -101,8 +101,8 @@
         "status": 200,
         "json": {
           "user": {
-            "id": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
-            "email": "work256-a-muwjdds6@example.invalid",
+            "id": "911074b1-69bd-471a-b386-ace9bc20a508",
+            "email": "work256-a-muwl11go@example.invalid",
             "emailVerified": false
           }
         }
@@ -129,15 +129,15 @@
       "name": "identity: concurrent first requests resolve one identity",
       "ok": true,
       "detail": [
-        "f98fc224-95d8-4ab9-a44e-d64ddaf76f21"
+        "97583d9c-a1ef-457a-9085-cb960d393251"
       ]
     },
     {
       "name": "identity: A and B map to distinct app identities",
       "ok": true,
       "detail": {
-        "idA": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
-        "idB": "f98fc224-95d8-4ab9-a44e-d64ddaf76f21"
+        "idA": "911074b1-69bd-471a-b386-ace9bc20a508",
+        "idB": "97583d9c-a1ef-457a-9085-cb960d393251"
       }
     },
     {
@@ -147,8 +147,8 @@
         "status": 200,
         "json": {
           "user": {
-            "id": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
-            "email": "work256-a-muwjdds6@example.invalid",
+            "id": "911074b1-69bd-471a-b386-ace9bc20a508",
+            "email": "work256-a-muwl11go@example.invalid",
             "emailVerified": false
           }
         }
@@ -192,8 +192,8 @@
         "status": 200,
         "json": {
           "user": {
-            "id": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
-            "email": "work256-a-muwjdds6@example.invalid",
+            "id": "911074b1-69bd-471a-b386-ace9bc20a508",
+            "email": "work256-a-muwl11go@example.invalid",
             "emailVerified": false
           }
         }
@@ -237,23 +237,23 @@
         "json": {
           "rows": [
             {
-              "id": "585941d0-b26b-4caa-9828-bbc70716ce49",
-              "user_id": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
+              "id": "631cd8d8-8788-4e53-a47b-d57b74758f23",
+              "user_id": "911074b1-69bd-471a-b386-ace9bc20a508",
               "label": "2027FY",
               "start_date": "2026-07-01",
               "end_date": "2027-06-30",
               "is_active": true,
-              "created_at": "2026-10-06T10:29:19.660Z"
+              "created_at": "2026-10-06T11:15:43.170Z"
             }
           ],
           "active": {
-            "id": "585941d0-b26b-4caa-9828-bbc70716ce49",
-            "user_id": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
+            "id": "631cd8d8-8788-4e53-a47b-d57b74758f23",
+            "user_id": "911074b1-69bd-471a-b386-ace9bc20a508",
             "label": "2027FY",
             "start_date": "2026-07-01",
             "end_date": "2027-06-30",
             "is_active": true,
-            "created_at": "2026-10-06T10:29:19.660Z"
+            "created_at": "2026-10-06T11:15:43.170Z"
           }
         }
       }
@@ -262,8 +262,8 @@
       "name": "fy: B gets its own FY row",
       "ok": true,
       "detail": {
-        "fyA": "585941d0-b26b-4caa-9828-bbc70716ce49",
-        "fyB": "785274f2-244c-4654-a5fd-f47a75e21acd"
+        "fyA": "631cd8d8-8788-4e53-a47b-d57b74758f23",
+        "fyB": "2a76579e-014b-4277-8256-e7a85cd77be6"
       }
     },
     {
@@ -350,11 +350,11 @@
       "ok": true,
       "detail": [
         {
-          "id": "b1285e17-efde-4d60-91b7-de0fb25be608",
+          "id": "bee1e903-b936-423a-a186-fe0002df7345",
           "classification": "lff",
           "effective_from": "2026-07-01",
-          "source_ref": "WORK-256 synthetic E2E muwjdds6",
-          "created_at": "2026-10-06T10:29:31.001Z"
+          "source_ref": "WORK-256 synthetic E2E muwl11go",
+          "created_at": "2026-10-06T11:15:54.640Z"
         }
       ]
     },
@@ -456,7 +456,7 @@
       "name": "claims: create recalls",
       "ok": true,
       "detail": {
-        "claimId": "9d5cb46e-8957-401c-b50f-4e22b601c43a",
+        "claimId": "41895555-db09-4f61-b361-1ad70b1f19d6",
         "claimNumber": 1,
         "claimType": "RC",
         "entitlements": [
@@ -610,7 +610,7 @@
       "name": "claims: create retain",
       "ok": true,
       "detail": {
-        "claimId": "2c3d446e-9baa-4975-897e-5079e8730351",
+        "claimId": "16f53e1b-3e22-43dc-b06e-2454f37d98e7",
         "claimNumber": 1,
         "claimType": "RT",
         "entitlements": [
@@ -710,7 +710,7 @@
       "name": "claims: create standby",
       "ok": true,
       "detail": {
-        "claimId": "3ef6f466-10ce-48b9-b1be-0894897d899b",
+        "claimId": "1a79939c-da3f-4554-882f-f2821fdfabba",
         "claimNumber": 1,
         "claimType": "SB",
         "entitlements": [
@@ -784,7 +784,7 @@
       "name": "claims: create md",
       "ok": true,
       "detail": {
-        "claimId": "fcba11f6-a820-4b9e-9faf-7f316b9c1c68",
+        "claimId": "7eb714b9-1de3-40a9-9854-c67a1dce116d",
         "claimNumber": 1,
         "claimType": "MD",
         "entitlements": [
@@ -844,7 +844,7 @@
       "name": "claims: create spoilt",
       "ok": true,
       "detail": {
-        "claimId": "f4d23aa0-5157-4aa6-8801-558a0d7ec6af",
+        "claimId": "c5713326-f38c-435a-afc8-fc6ee9849e06",
         "claimNumber": 1,
         "claimType": "SM",
         "entitlements": [
@@ -907,7 +907,7 @@
       "name": "claims: create delayed_meal",
       "ok": true,
       "detail": {
-        "claimId": "2837c0fa-ca19-4e02-a35e-422772132e4f",
+        "claimId": "d6b48025-29a6-4e16-907d-5955a9aab955",
         "claimNumber": 1,
         "claimType": "DM",
         "entitlements": [
@@ -1171,7 +1171,7 @@
       "name": "rules SM: spoilt meal allowance",
       "ok": true,
       "detail": {
-        "claimId": "f4d23aa0-5157-4aa6-8801-558a0d7ec6af",
+        "claimId": "c5713326-f38c-435a-afc8-fc6ee9849e06",
         "claimNumber": 1,
         "claimType": "SM",
         "entitlements": [
@@ -1198,7 +1198,7 @@
       "name": "rules DM: delayed meal allowance (75 min > 30, no notice)",
       "ok": true,
       "detail": {
-        "claimId": "2837c0fa-ca19-4e02-a35e-422772132e4f",
+        "claimId": "d6b48025-29a6-4e16-907d-5955a9aab955",
         "claimNumber": 1,
         "claimType": "DM",
         "entitlements": [
@@ -1225,7 +1225,7 @@
       "name": "rules SB: standby & dismiss generated",
       "ok": true,
       "detail": {
-        "claimId": "3ef6f466-10ce-48b9-b1be-0894897d899b",
+        "claimId": "1a79939c-da3f-4554-882f-f2821fdfabba",
         "claimNumber": 1,
         "claimType": "SB",
         "entitlements": [
@@ -1265,7 +1265,7 @@
       "name": "rules MD: muster & dismiss generated",
       "ok": true,
       "detail": {
-        "claimId": "fcba11f6-a820-4b9e-9faf-7f316b9c1c68",
+        "claimId": "7eb714b9-1de3-40a9-9854-c67a1dce116d",
         "claimNumber": 1,
         "claimType": "MD",
         "entitlements": [
@@ -1445,7 +1445,7 @@
     {
       "name": "isolation: B cannot change A FY state",
       "ok": true,
-      "detail": "585941d0-b26b-4caa-9828-bbc70716ce49"
+      "detail": "631cd8d8-8788-4e53-a47b-d57b74758f23"
     },
     {
       "name": "isolation: B cannot create a claim in A FY (404)",
@@ -1464,7 +1464,7 @@
       "detail": {
         "status": 200,
         "json": {
-          "claimId": "e9d418b7-acff-4396-a504-c34745107691",
+          "claimId": "a497aa8b-aaa1-4b09-ac62-3d6a7a379f31",
           "claimNumber": 1,
           "claimType": "SM",
           "entitlements": [
@@ -1506,8 +1506,8 @@
       "ok": true,
       "detail": {
         "user": {
-          "id": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
-          "email": "work256-a-muwjdds6@example.invalid",
+          "id": "911074b1-69bd-471a-b386-ace9bc20a508",
+          "email": "work256-a-muwl11go@example.invalid",
           "emailVerified": false
         }
       }
