@@ -1,0 +1,116 @@
+{
+  "evidence_class": "synthetic",
+  "level": "plan (no DB write is possible: apply SQL is refused)",
+  "cases": [
+    {
+      "source": "recalls:c2f00000-0000-4000-8000-000000000102",
+      "patch": {
+        "payment_status": "Paid",
+        "payment_date": null
+      },
+      "outcome": "fail",
+      "gate6": "fail",
+      "gates_1_5_7": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "failures": [
+        "C3_PAID_WITHOUT_DATE"
+      ],
+      "genuine_failures": 1,
+      "apply_sql": "refused: C2 apply refused: acceptance gates fail (6)"
+    },
+    {
+      "source": "spoilt_meals:c2f00000-0000-4000-8000-000000000104",
+      "patch": {
+        "payment_status": "Pending",
+        "payment_date": "2026-02-01T00:00:00Z"
+      },
+      "outcome": "fail",
+      "gate6": "fail",
+      "gates_1_5_7": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "failures": [
+        "C3_PENDING_WITH_DATE"
+      ],
+      "genuine_failures": 1,
+      "apply_sql": "refused: C2 apply refused: acceptance gates fail (6)"
+    },
+    {
+      "source": "standby:c2f00000-0000-4000-8000-000000000502",
+      "patch": {
+        "payment_status": null,
+        "payment_date": "2026-02-01T00:00:00Z"
+      },
+      "outcome": "fail",
+      "gate6": "fail",
+      "gates_1_5_7": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "failures": [
+        "C3_UNPAID_WITH_DATE"
+      ],
+      "genuine_failures": 1,
+      "apply_sql": "refused: C2 apply refused: acceptance gates fail (6)"
+    },
+    {
+      "source": "standby:c2f00000-0000-4000-8000-000000000502",
+      "patch": {
+        "payment_status": null,
+        "status": "Paid"
+      },
+      "outcome": "fail",
+      "gate6": "fail",
+      "gates_1_5_7": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "failures": [
+        "C3_LEGACY_STATUS_CONFLICT"
+      ],
+      "genuine_failures": 1,
+      "apply_sql": "refused: C2 apply refused: acceptance gates fail (6)"
+    },
+    {
+      "source": "spoilt_meals:c2f00000-0000-4000-8000-000000000601",
+      "patch": {
+        "payment_status": "Disputed",
+        "payment_date": null
+      },
+      "outcome": "fail",
+      "gate6": "fail",
+      "gates_1_5_7": [
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass",
+        "pass"
+      ],
+      "failures": [
+        "C3_UNKNOWN_PAYMENT_STATUS"
+      ],
+      "genuine_failures": 1,
+      "apply_sql": "refused: C2 apply refused: acceptance gates fail (6)"
+    }
+  ]
+}
