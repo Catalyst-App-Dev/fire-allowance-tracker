@@ -53,29 +53,14 @@ database:
   # The `fat` schema must remain exposed to PostgREST.
 
 # Application-owned backend boundary (Governance v2 data.application-backend,
-# schema catalyst/backend@1; WORK-254).
-#   state migrating: FAT owns an isolated Neon project (created empty in N0/N1,
-#   2026-10-06). `main` is the protected production target and holds nothing;
-#   `dev` is the persistent development target, forked from the empty `main`,
-#   with synthetic identities and data only. The legacy shared Supabase
-#   projects stay the one authoritative PROD, writes open, until cutover.
-#   The legacy boundary is FAT's own `fat` schema in each Supabase project,
-#   including the prototype claim tables (recalls/retain/standby/spoilt_meals/
-#   claim_groups/user_rates) that are the C2/C3 migration source.
-# A target's role comes only from this declaration, never from its name.
+# schema catalyst/backend@1; WORK-254). N0: FAT still runs on the legacy shared
+# Supabase projects, which stay the one authoritative PROD with writes open.
+# The legacy boundary is FAT's own `fat` schema in each project, including the
+# prototype claim tables (recalls/retain/standby/spoilt_meals/claim_groups/
+# user_rates) that are the C2/C3 migration source.
 backend:
   schema: catalyst/backend@1
-  state: migrating
-  provider: neon
-  project: cool-meadow-70196410
-  targets:
-    prod:
-      name: main
-      id: br-red-credit-a77927m4
-    dev:
-      name: dev
-      id: br-wispy-dew-a7vd4v6k
-  preview: risk-triggered
+  state: legacy-shared
   legacy:
     provider: supabase
     projects:

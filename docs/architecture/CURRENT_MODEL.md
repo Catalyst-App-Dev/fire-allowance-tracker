@@ -241,6 +241,17 @@ functions, RLS on every table.**
   dropped by ledger `20261001232645 work169_drop_fat_friends_replication_v1`. Package and
   verbatim provenance: `supabase/dev-cleanup/work-169-friends-replication/`.
 
+## Application-owned Neon backend (DEV only, WORK-254)
+
+- Declared in `.catalyst/app.yml` `backend:` — `state: migrating`, Neon project
+  `cool-meadow-70196410` (`aws-ap-southeast-2`): `main` `br-red-credit-a77927m4` (production
+  target, **empty**), `dev` `br-wispy-dew-a7vd4v6k` (synthetic data only). Legacy Supabase stays
+  the one authoritative PROD, writes open; the app does not read or write Neon yet (F3).
+- Neon `dev` holds the portable canonical schema (`neon/migrations/`, ledger
+  `fat_migrations.schema_migrations`, 6 migrations) and the synthetic fixture
+  `fat-dev-synthetic-20261006`. Design, adaptation matrix and identity seam:
+  [`NEON_BACKEND.md`](NEON_BACKEND.md); evidence: `docs/evidence/WORK-254/`.
+
 ## PROD vs DEV divergence
 
 | Aspect | PROD | DEV |
