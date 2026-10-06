@@ -1,0 +1,84 @@
+{
+  "evidence_class": "synthetic",
+  "environment": "dev",
+  "project": "kctctvpobbizhkiqkgqw",
+  "executed_at": "2026-10-06",
+  "harness": {
+    "path": "docs/evidence/WORK-191/synthetic/harness.sql",
+    "sha256": "befc5ef9c942b01dee1003a49fbcda56fc214521b600b4f56df58d700bf2e8bb",
+    "delivery": "fetched by DEV pg_net (request id 5, HTTP 200, 170645 chars) from task-branch commit 8c5150f raw URL; sha256 re-checked inside the executing statement before EXECUTE (operator approved option A)"
+  },
+  "inputs": {
+    "fixture": "__tests__/fixtures/c2/synthetic-source.json bound to DEV owner 7c90ba30…, FY 40f30d91… (2026FY), stations 1, 2",
+    "reference": "DEV fat.financial_years / stations / profiles / rates (10) / rate_versions (28; Σ value 32483.0993 cross-checked in DEV) / member_classifications",
+    "expect": "expect.json: 8 claims, 12 entitlements, 2 adjustments, 25 ledger, 7 payment records, 7 links, paid 623.15"
+  },
+  "transaction": "single statement ending in RAISE C2_SYNTHETIC_RESULT: every fixture and canonical row rolled back",
+  "result": {
+    "fixture_check": {
+      "claim_groups": { "fixture_rows": 7, "stored_as_given": 7 },
+      "recalls": { "fixture_rows": 3, "stored_as_given": 3 },
+      "retain": { "fixture_rows": 4, "stored_as_given": 4 },
+      "standby": { "fixture_rows": 4, "stored_as_given": 4 },
+      "spoilt_meals": { "fixture_rows": 7, "stored_as_given": 7 }
+    },
+    "steps": {
+      "step1_first_run": { "ok": true, "batch_inserted": 1, "claims": { "planned": 8, "inserted": 8 }, "details": { "planned": 8, "inserted": 8 }, "entitlements": { "planned": 12, "inserted": 12, "adjustments_applied": 2 }, "ledger": { "planned": 25, "inserted": 25 }, "payment_records": { "planned": 7, "inserted": 7 }, "payment_links": { "planned": 7, "linked": 7 } },
+      "step2_identical_rerun": { "ok": true, "batch_inserted": 0, "claims": { "inserted": 0, "verified_existing": 8 }, "details": { "inserted": 0, "verified_existing": 8 }, "entitlements": { "inserted": 0, "verified_existing": 12, "adjustments_applied": 0 }, "ledger": { "inserted": 0, "verified_existing": 25 }, "payment_records": { "inserted": 0, "verified_existing": 7 }, "payment_links": { "linked": 0, "verified_existing": 7 } },
+      "step3_tampered_claim": { "ok": false, "error": "C2 conflict: operational_claims 05992922-60c9-5c1f-acdc-974d2bea0168 differs from the planned canonical row (or its lineage is held by another row)" },
+      "step4_changed_source_amount": { "ok": false, "error": "C2 conflict: claim_entitlements c85b0dd0-5ff1-543a-8816-682e09530e80 differs from the planned preserved entitlement" },
+      "step5_tampered_payment_record": { "ok": false, "error": "C2 conflict: payment_records 18f98406-17b4-5d89-9d0c-3352d81e0847 differs from the planned migrated payment record (or its migration_source_key is held by another row)" },
+      "step6_deleted_payment_link": { "ok": false, "error": "C2 conflict: planned payment link c85b0dd0-5ff1-543a-8816-682e09530e80 -> 538a841f-9b79-55a7-ad7e-9cee43c3026b is missing although its payment record already existed; it is not re-created" },
+      "step7_changed_source_paid_to_unpaid": { "ok": false, "error": "C2 conflict: 1 payment link(s) on migrated entitlements are not in the plan" }
+    },
+    "verify_after_step2": {
+      "batch": { "status": "completed", "outcome": "pass", "report_sha256": "474f47167ad0751f3dcd54fbe7864e6671197569b67b65e09938d9f7e0985bb2" },
+      "lineage_claims": 8,
+      "lineage_claims_by_type": { "DM": 1, "MD": 1, "RC": 1, "RT": 2, "SB": 1, "SM": 2 },
+      "lineage_entitlements": 12,
+      "ledger_by_disposition": { "claim": 15, "entitlement": 9, "excluded": 1 },
+      "gate2_number_or_fy_mismatch": 0,
+      "gate2_scope_duplicates": 0,
+      "gate3_bad_detail": 0,
+      "gate3_parents_without_claim": 0,
+      "gate4_child_violations": 0,
+      "gate5_missing_source_rows": 0,
+      "gate5_value_mismatches": 0,
+      "gate5_adjustment_mismatches": 0,
+      "gate5_totals": { "dollars_source": 280.45, "dollars_target": 280.45, "hours_source": 8.25, "hours_target": 8.25 },
+      "gate6_source_states": { "paid": 7, "unpaid": 5 },
+      "gate6_source_invalid": 0,
+      "gate6_paid_without_exactly_one_migration_link": 0,
+      "gate6_unpaid_with_links": 0,
+      "gate6_allocation_mismatches": 0,
+      "gate6_record_date_mismatches": 0,
+      "gate6_status_mismatches": 0,
+      "gate6_audit_mismatches": 0,
+      "gate6_unlinked_migration_records": 0,
+      "gate6_duplicate_source_keys": 0,
+      "gate6_totals": { "source_paid_entitlements": 7, "source_paid_amount": 623.15, "migration_records": 7, "links_on_lineage": 7, "allocated_amount": 623.15 },
+      "gate7_cross_owner_entitlements": 0,
+      "gate7_cross_owner_fy": 0,
+      "gate7_ledger_orphan_or_cross_owner": 0,
+      "gate7_orphan_details": 0,
+      "gate7_payment_links_cross_owner_or_stream": 0,
+      "gate7_rls_disabled": 0,
+      "gate7_api_privileges_on_migration_tables": 0,
+      "native": { "claims": 4, "entitlements": 9, "fingerprint": "d2a7260282e33e49718c88fe8bac12c1" }
+    },
+    "delta_b": { "entitlements": 1, "ledger": 1 },
+    "delta_c": { "entitlements": 1, "ledger": 1, "payment_records": 6, "payment_links": 6 },
+    "before_native": { "claims": 4, "entitlements": 9, "fingerprint": "d2a7260282e33e49718c88fe8bac12c1" },
+    "after_reset": { "lineage_claims": 0, "lineage_entitlements": 0, "migration_payment_records": 0, "reconciliation_audit": 4, "ledger": 0, "batches": 1, "native": { "claims": 4, "entitlements": 9, "fingerprint": "d2a7260282e33e49718c88fe8bac12c1" } }
+  },
+  "post_statement_check": {
+    "payment_records": 0, "entitlement_payment_links": 0, "reconciliation_audit": 4,
+    "reconciliation_audit_fingerprint": "b108dc589e617eacb8b541ab84243cc3 (unchanged from pre-rehearsal baseline)",
+    "migration_batches": ["c2:dev:1.0.0:524acd010e0164d4b2de00bc1879d724 (WORK-190 real envelope, untouched)"],
+    "prototype_rows": 0, "operational_claims": 4, "claim_entitlements": 9, "migration_source_rows": 0
+  },
+  "notes": [
+    "plan_a_sha256 / fixture_sha256 fields of the RAISE payload were cut by the client's output truncation; plan A is bound by the harness sha256 above and expect.json plan_a_sha256 4dc63992…54bd.",
+    "Contradictory source evidence is refused at plan level (no apply SQL exists): contradictory-plans.json."
+  ]
+}

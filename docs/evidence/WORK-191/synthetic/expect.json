@@ -1,0 +1,18 @@
+{
+  "plan_a_sha256": "4dc639928d645593d3693a12c217eece9b8d09c847d3684b6bdc927fce2d54bd",
+  "claims": 8,
+  "entitlements": 12,
+  "ledger": 25,
+  "adjustments": 2,
+  "payment_records": 7,
+  "payment_links": 7,
+  "paid_amount": 623.15,
+  "details": {
+    "recall_details": 1,
+    "retain_details": 2,
+    "standby_details": 1,
+    "muster_dismiss_details": 1,
+    "spoilt_meal_details": 2,
+    "delayed_meal_details": 1
+  }
+}

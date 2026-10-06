@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ─── C2 transform-copy tool CLI (WORK-190) ───────────────────────────────────
+// ─── C2 transform-copy tool CLI (WORK-190; C3 payment state WORK-191) ────────
 // Deterministic prototype → canonical transform with a machine-readable parity
 // report. Contract: docs/architecture/C2_TRANSFORM_CONTRACT.md.
 //
@@ -11,7 +11,8 @@
 //   bind-fixture --fixture F --owner U --fy FY --stations A,B --out B
 //                                                 bind a synthetic fixture's placeholders (source only)
 //   fixture-snapshot-sql --source B               read-only query: fixture as source + DB reference/target
-//   harness-sql --snapshot X --out DIR            synthetic rehearsal harness (plan A + changed-source plan B);
+//   harness-sql --snapshot X --out DIR            synthetic rehearsal harness (plan A + changed-source plans B (amount)
+//                                                 and C (payment state, WORK-191));
 //                                                 transaction-scoped, ends in RAISE — nothing persists
 //   check --report R --verify V                   compare a verify result with the report
 //
@@ -21,7 +22,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import {
   planC2, extractSql, applySql, verifySql, rollbackSql, syntheticHarnessSql, checkVerify,
-  bindSource, fixtureSnapshotSql, mutateSourceForConflict, canonicalJson, planSha256, fixtureJson, sha256Json,
+  bindSource, fixtureSnapshotSql, mutateSourceForConflict, mutateSourceForPaymentChange, canonicalJson, planSha256, fixtureJson, sha256Json,
 } from '../lib/fat/migration/c2/index.js'
 import { SOURCE_TABLES } from '../lib/fat/migration/c2/constants.js'
 
@@ -67,16 +68,19 @@ if (cmd === 'extract-sql') {
   const x = snap(need(o, 'snapshot'))
   const a = planC2(x, { environment: 'dev', evidenceClass: 'synthetic' })
   const b = planC2(mutateSourceForConflict(x), { environment: 'dev', evidenceClass: 'synthetic' })
-  if (a.report.outcome !== 'pass' || b.report.outcome !== 'pass') { console.error('synthetic plans must pass their gates'); process.exit(1) }
+  const c = planC2(mutateSourceForPaymentChange(x), { environment: 'dev', evidenceClass: 'synthetic' })
+  if (a.report.outcome !== 'pass' || b.report.outcome !== 'pass' || c.report.outcome !== 'pass') { console.error('synthetic plans must pass their gates'); process.exit(1) }
   const fixtureSource = Object.fromEntries(SOURCE_TABLES.map((t) => [t, x.source[t] || []]))
   write(out, 'report-A.json', canonicalJson(a.report) + '\n')
   write(out, 'plan-A.json', canonicalJson(a.plan) + '\n')
   write(out, 'report-B.json', canonicalJson(b.report) + '\n')
-  write(out, 'harness.sql', syntheticHarnessSql({ fixtureSource, planA: a.plan, planB: b.plan }))
+  write(out, 'report-C.json', canonicalJson(c.report) + '\n')
+  write(out, 'harness.sql', syntheticHarnessSql({ fixtureSource, planA: a.plan, planB: b.plan, planC: c.plan }))
   const expect = {
     plan_a_sha256: planSha256(a.plan),
     claims: a.plan.claims.length, entitlements: a.plan.entitlements.length, ledger: a.plan.ledger.length,
-    adjustments: a.plan.adjustments.length, details: Object.fromEntries(Object.entries(a.plan.details).map(([t, r]) => [t, r.length])),
+    adjustments: a.plan.adjustments.length, payment_records: a.plan.payment_records.length, payment_links: a.plan.payment_links.length,
+    paid_amount: a.report.gates['6'].evidence.source_paid.amount, details: Object.fromEntries(Object.entries(a.plan.details).map(([t, r]) => [t, r.length])),
   }
   write(out, 'expect.json', JSON.stringify(expect, null, 2) + '\n')
   console.log(JSON.stringify({ ...expect, batch_key_A: a.plan.batch_key, batch_key_B: b.plan.batch_key, outcome: a.report.outcome, harness_bytes: fs.statSync(path.join(out, 'harness.sql')).size }, null, 2))

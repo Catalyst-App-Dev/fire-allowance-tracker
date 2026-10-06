@@ -79,6 +79,10 @@ Maps prototype payment state into auditable canonical payment records, allocatio
 reconciliation evidence with source provenance. Bare prototype `payment_status` toggles do
 **not** remain authoritative: after C3 there is one payment truth. Does not enable Payments
 (WORK-175).
+Delivered by WORK-191 inside the C2 tool (version 1.1.0, same batch): contract
+[`C3_PAYMENT_STATE_CONTRACT.md`](C3_PAYMENT_STATE_CONTRACT.md), `lib/fat/migration/c2/payments.js`,
+DEV rehearsal evidence in `docs/evidence/WORK-191/`. The tool's acceptance is now gates 1–7;
+8 stays with C4 and 9 with C5. No schema change.
 
 ### C4 — PROD transform-copy under explicit write freeze
 Only after prerequisites and a separate Production approval. Claim and payment mutations
@@ -159,7 +163,7 @@ window, announcement and mechanism are fixed in the C4 Issue before Production a
 |---|---|---|
 | C1 | [WORK-189](https://linear.app/catalyst-app-development/issue/WORK-189) — C1 Canonical schema/contract readiness (**DEV complete**) | WORK-172 (done) |
 | C2 | [WORK-190](https://linear.app/catalyst-app-development/issue/WORK-190) — C2 Transform-copy tool + DEV rehearsal (owns WORK-173 generator parity) | C1 (done), WORK-173 (done) |
-| C3 | [WORK-191](https://linear.app/catalyst-app-development/issue/WORK-191) — C3 Historical payment-state migration | C2 |
+| C3 | [WORK-191](https://linear.app/catalyst-app-development/issue/WORK-191) — C3 Historical payment-state migration (**DEV complete**) | C2 (done) |
 | C4 | [WORK-192](https://linear.app/catalyst-app-development/issue/WORK-192) — C4 PROD transform-copy under write freeze | C3, WORK-165/166/167 |
 | C5 | [WORK-193](https://linear.app/catalyst-app-development/issue/WORK-193) — C5 Parity sign-off + canonical cutover | C4 |
 | C6 | [WORK-194](https://linear.app/catalyst-app-development/issue/WORK-194) — C6 Open canonical writes + observation | C5 |

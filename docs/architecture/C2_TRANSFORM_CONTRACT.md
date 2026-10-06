@@ -8,6 +8,11 @@
 > model: [`CURRENT_MODEL.md`](CURRENT_MODEL.md) states verified reality and
 > [`PROJECTED_MODEL.md`](PROJECTED_MODEL.md) the approved target.
 
+Extended 2026-10-06 by [WORK-191](https://linear.app/catalyst-app-development/issue/WORK-191)
+(tool 1.1.0): the same run now also maps historical payment state (C3) and evaluates gate 6 —
+see [`C3_PAYMENT_STATE_CONTRACT.md`](C3_PAYMENT_STATE_CONTRACT.md). Where this contract says
+`payment_status = NULL` or "gates 1–5 and 7", read the C3 contract.
+
 Established 2026-10-05 by [WORK-190](https://linear.app/catalyst-app-development/issue/WORK-190)
 (design record: WORK-190 *Investigation Record — C2 transform design*, PROMPT #18).
 Code: [`lib/fat/migration/c2/`](../../lib/fat/migration/c2/), CLI
@@ -108,7 +113,7 @@ copied **verbatim** (`generated_amount` for dollars, `generated_hours` for hours
 the historical retain dollars kept only in `rate_snapshot.historical_amount`, never derived);
 `rule_id = prototype.preserved.v1`, `rule_version = fat-c2-transform@1.0.0`,
 `rate_snapshot.kind = prototype_preserved` (with the prototype rates snapshot and retain rate
-used); `payment_status = NULL`. A prototype `adjusted_amount` becomes `edited_amount` with
+used); `payment_status` = the canonical status C3 derives (tool 1.0.0: NULL). A prototype `adjusted_amount` becomes `edited_amount` with
 `edited_source = prototype:<table>:<id>.adjusted_amount` and an `edited_note`, through the C1
 override audit trigger. Parent/child totals that do not reconcile, an unattributable parent
 amount or adjustment, an unmapped or missing stored component, and a **non-zero** recall
@@ -143,7 +148,7 @@ value is changed. Each item is exactly one of `exact_match`, `intended_differenc
 reasons). `report.generator_parity.by_type` counts them per type; `missing_inputs` counts each
 missing fact. Unknown classes fail the plan (`assertKnownClasses`).
 
-## 7. Report schema (`fat.c2.parity-report/v1`)
+## 7. Report schema (`fat.c2.parity-report/v1`; v2 since tool 1.1.0 adds gate 6, `payments` and `planned.payment_links` — C3 contract § 6)
 
 `schema`, `tool {name, version}`, `environment`, `evidence_class` (`real` | `synthetic`),
 `batch_key`, `source_checksum`, `input_fingerprint`, `source {rows, events, events_migrated,
