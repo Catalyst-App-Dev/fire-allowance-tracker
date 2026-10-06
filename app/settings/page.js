@@ -10,7 +10,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
+import { getCurrentSession } from '@/lib/auth/session'
 import { useRates } from '@/lib/calculations/RatesContext'
 import { RATE_FIELDS } from '@/lib/calculations/defaultRates'
 import { calcDoubleMealAllowance } from '@/lib/calculations/engine'
@@ -53,11 +53,11 @@ export default function SettingsPage() {
   const [formError, setFormError] = useState(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) { router.replace('/login'); return }
-      setSession(data.session)
+    getCurrentSession().catch(() => null).then((current) => {
+      if (!current) { router.replace('/login'); return }
+      setSession(current)
       setAuthLoading(false)
-      loadRates(data.session.user.id)
+      loadRates(current.user.id)
     })
   }, [router, loadRates])
 

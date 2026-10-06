@@ -47,6 +47,9 @@ import {
   roundMoney,
 } from '@/lib/calculations/engine'
 import { fat } from '@/lib/supabaseClient'
+import { isNeonBackend } from '@/lib/backend'
+import { callFat } from '@/lib/data/fatApi'
+import { loadClaimFormProfile, listActiveStations } from '@/lib/profile/profileRepository'
 import InfoPopover from '@/components/claims/InfoPopover'
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
@@ -816,6 +819,155 @@ function SpoiltInputs({ values, onChange, date, claimType, stations, profile }) 
   )
 }
 
+// ─── Neon backend: canonical facts + canonical preview (WORK-256) ─────────────
+// On FAT_BACKEND=neon a claim is written as a canonical operational claim whose
+// entitlements are generated server-side by the WORK-173 rules. Those rules
+// need a few facts the prototype form never collected; they are asked for here
+// and nothing is inferred when one is left blank (the dependent entitlement is
+// simply not generated). The preview is the server's own dry run of the same
+// pipeline, so what is shown is exactly what will be saved.
+
+const NEON = isNeonBackend()
+
+const yesNoValue = (v) => (v === true ? 'yes' : v === false ? 'no' : '')
+const yesNoParse = (v) => (v === 'yes' ? true : v === 'no' ? false : null)
+
+function YesNoSelect({ value, onChange }) {
+  return (
+    <select value={yesNoValue(value)} onChange={(e) => onChange(yesNoParse(e.target.value))}
+      style={{ ...INPUT_STYLE, cursor: 'pointer' }}>
+      <option value="">Not recorded</option>
+      <option value="no">No</option>
+      <option value="yes">Yes</option>
+    </select>
+  )
+}
+
+function NumberFact({ value, onChange, step = '1', placeholder }) {
+  return (
+    <input type="number" min="0" step={step} placeholder={placeholder}
+      value={value ?? ''} onChange={(e) => onChange(e.target.value === '' ? null : e.target.value)}
+      style={INPUT_STYLE} />
+  )
+}
+
+function CanonicalFactsInputs({ claimType, shift, facts, onChange }) {
+  const set = (k) => (v) => onChange({ ...facts, [k]: v })
+  const box = { marginBottom: '16px', padding: '12px', border: '1px solid #2a2a2a', borderRadius: '8px', background: '#121212' }
+  const hint = { fontSize: '0.72rem', color: '#6b7280', marginTop: '4px' }
+  let body = null
+  if (claimType === 'recalls') {
+    body = (
+      <>
+        <div style={FIELD}><label style={LABEL_STYLE}>Travel time (minutes, home → recall location → home)</label>
+          <NumberFact value={facts.travelMinutes} onChange={set('travelMinutes')} placeholder="e.g. 50" /></div>
+        <div style={FIELD}><label style={LABEL_STYLE}>Sunday or public holiday?</label>
+          <YesNoSelect value={facts.travelSundayOrPh} onChange={set('travelSundayOrPh')} /></div>
+        <div style={FIELD}><label style={LABEL_STYLE}>Mileage (km, home → recall location → home)</label>
+          <NumberFact value={facts.travelDistanceKm} onChange={set('travelDistanceKm')} step="0.1" placeholder="e.g. 42.5" /></div>
+      </>
+    )
+  } else if (claimType === 'retain') {
+    body = (
+      <>
+        {shift === 'Night' && (
+          <div style={FIELD}><label style={LABEL_STYLE}>Was the night shift interrupted by a fire call, incident or fire duty?</label>
+            <YesNoSelect value={facts.nightShiftInterrupted} onChange={set('nightShiftInterrupted')} /></div>
+        )}
+        {shift === 'Night' && facts.nightShiftInterrupted === true && (
+          <div style={FIELD}><label style={LABEL_STYLE}>Travel home (minutes)</label>
+            <NumberFact value={facts.travelHomeMinutes} onChange={set('travelHomeMinutes')} placeholder="e.g. 45" /></div>
+        )}
+        {shift !== 'Night' && <p style={hint}>No extra facts needed for a day-shift retain.</p>}
+      </>
+    )
+  } else if (claimType === 'spoilt') {
+    body = (
+      <div style={FIELD}><label style={LABEL_STYLE}>Was the meal interrupted by a response to an emergency call?</label>
+        <YesNoSelect value={facts.emergencyResponse} onChange={set('emergencyResponse')} /></div>
+    )
+  } else if (claimType === 'delayed_meal') {
+    body = (
+      <>
+        <div style={FIELD}><label style={LABEL_STYLE}>Normal meal break — start</label>
+          <TimeInput24 value={facts.mealWindowStart || ''} onChange={set('mealWindowStart')} /></div>
+        <div style={FIELD}><label style={LABEL_STYLE}>Normal meal break — end</label>
+          <TimeInput24 value={facts.mealWindowEnd || ''} onChange={set('mealWindowEnd')} /></div>
+        <div style={FIELD}><label style={LABEL_STYLE}>Meal actually taken at</label>
+          <TimeInput24 value={facts.actualMealTime || ''} onChange={set('actualMealTime')} /></div>
+        <div style={FIELD}><label style={LABEL_STYLE}>Were you given 2 hours' notice of the delay?</label>
+          <YesNoSelect value={facts.delayNotice2h} onChange={set('delayNotice2h')} /></div>
+        <div style={FIELD}><label style={LABEL_STYLE}>Cause of the delay</label>
+          <select value={facts.delayCause || ''} onChange={(e) => set('delayCause')(e.target.value || null)}
+            style={{ ...INPUT_STYLE, cursor: 'pointer' }}>
+            <option value="">Not recorded</option>
+            <option value="other">Other duty</option>
+            <option value="fire_call">Fire call</option>
+            <option value="salvage">Salvage</option>
+            <option value="watching">Watching duty</option>
+          </select></div>
+        {facts.delayCause && facts.delayCause !== 'other' && (
+          <>
+            <div style={FIELD}><label style={LABEL_STYLE}>Duty start</label>
+              <TimeInput24 value={facts.dutyStart || ''} onChange={set('dutyStart')} /></div>
+            <div style={FIELD}><label style={LABEL_STYLE}>Duty end</label>
+              <TimeInput24 value={facts.dutyEnd || ''} onChange={set('dutyEnd')} /></div>
+          </>
+        )}
+      </>
+    )
+  }
+  if (!body) return null
+  return (
+    <div style={box}>
+      <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px' }}>
+        Entitlement facts
+      </div>
+      {body}
+      <p style={hint}>Leave a fact blank if it does not apply — entitlements that depend on it are not generated.</p>
+    </div>
+  )
+}
+
+function CanonicalPreview({ preview, loading, error }) {
+  const panel = { marginBottom: '16px', padding: '12px', border: '1px solid #2a2a2a', borderRadius: '8px', background: '#141414' }
+  if (error) return <div style={{ ...panel, color: '#f87171', fontSize: '0.8rem' }}>{error}</div>
+  if (!preview) return loading ? <div style={{ ...panel, color: '#6b7280', fontSize: '0.8rem' }}>Calculating entitlements…</div> : null
+  const dollars = preview.entitlements.filter((e) => e.unit === 'dollars').reduce((s, e) => s + Number(e.amount || 0), 0)
+  const hours = preview.entitlements.filter((e) => e.unit === 'hours').reduce((s, e) => s + Number(e.hours || 0), 0)
+  return (
+    <div style={panel}>
+      <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+        Entitlements {loading ? '· updating…' : ''}
+      </div>
+      {preview.entitlements.length === 0 && (
+        <p style={{ fontSize: '0.8rem', color: '#9ca3af', margin: 0 }}>No entitlement is generated from the facts entered.</p>
+      )}
+      {preview.entitlements.map((e, i) => (
+        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '0.82rem', color: '#e5e7eb', padding: '3px 0' }}>
+          <span>{e.label} <span style={{ color: '#6b7280', fontSize: '0.7rem' }}>({e.paymentMethod === 'petty_cash' ? 'Petty Cash' : 'Payslip'})</span></span>
+          <span style={{ fontVariantNumeric: 'tabular-nums' }}>
+            {e.unit === 'hours'
+              ? `${Number(e.hours).toFixed(2)} h${e.estimate != null ? ` (≈ $${Number(e.estimate).toFixed(2)} est.)` : ''}`
+              : `$${Number(e.amount).toFixed(2)}`}
+          </span>
+        </div>
+      ))}
+      {preview.entitlements.length > 0 && (
+        <div style={{ borderTop: '1px solid #262626', marginTop: '6px', paddingTop: '6px', fontSize: '0.82rem', color: '#f9fafb', fontWeight: 700, display: 'flex', justifyContent: 'space-between' }}>
+          <span>Total</span>
+          <span>${dollars.toFixed(2)}{hours > 0 ? ` + ${hours.toFixed(2)} h` : ''}</span>
+        </div>
+      )}
+      {preview.missingFacts?.length > 0 && (
+        <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '8px 0 0' }}>
+          Not recorded: {preview.missingFacts.join(', ').replaceAll('_', ' ')}.
+        </p>
+      )}
+    </div>
+  )
+}
+
 // ─── Default values per type ──────────────────────────────────────────────────
 
 const DEFAULTS = {
@@ -856,6 +1008,11 @@ export default function ClaimForm({ userId, financialYearId, onSuccess, onCancel
   const [showCalcLines, setShowCalcLines]   = useState(null)
   const [submitting, setSubmitting]         = useState(false)
   const [error, setError]                   = useState(null)
+  // Neon backend (WORK-256): explicit canonical facts + server preview.
+  const [facts, setFacts]                   = useState({})
+  const [canonicalPreview, setCanonicalPreview] = useState(null)
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewError, setPreviewError]     = useState(null)
   const [profile, setProfile]               = useState(null)
   const [profileLoading, setProfileLoading] = useState(true)
   const [stations, setStations]             = useState([])
@@ -878,23 +1035,15 @@ export default function ClaimForm({ userId, financialYearId, onSuccess, onCancel
     let cancelled = false
     setProfileLoading(true)
     ;(async () => {
-      const { data: ext } = await fat
-        .from('profile_ext')
-        .select('station_id, home_dist_km, home_address, platoon')
-        .eq('user_id', userId)
-        .maybeSingle()
-      if (cancelled) return
-
-      let stationName = ''
-      if (ext?.station_id) {
-        const { data: stn } = await fat
-          .from('stations')
-          .select('name')
-          .eq('id', ext.station_id)
-          .maybeSingle()
-        if (cancelled) return
-        stationName = stn?.name || ''
+      // lib/profile/profileRepository.js — server-side on Neon (WORK-256).
+      let loaded = { ext: null, stationName: '' }
+      try {
+        loaded = isNeonBackend() ? await callFat('profile.claimForm') : await loadClaimFormProfile(fat, userId)
+      } catch (e) {
+        console.warn('[ClaimForm] Profile load error:', e)
       }
+      if (cancelled) return
+      const { ext, stationName } = loaded
 
       if (ext) {
         // Identity is the station id; the display label is derived from the
@@ -921,19 +1070,10 @@ export default function ClaimForm({ userId, financialYearId, onSuccess, onCancel
   // or "Sunshine" into a station ID for the auto-distance flow.
   useEffect(() => {
     let cancelled = false
-    fat
-      .from('stations')
-      .select('id, name, abbreviation')
-      .eq('is_active', true)
-      .order('id', { ascending: true })
-      .then(({ data, error: stnErr }) => {
-        if (cancelled) return
-        if (stnErr) {
-          console.warn('[ClaimForm] Stations fetch error:', stnErr)
-          return
-        }
-        if (data) setStations(data)
-      })
+    const load = isNeonBackend() ? callFat('stations.list') : listActiveStations(fat)
+    load
+      .then((data) => { if (!cancelled && data) setStations(data) })
+      .catch((stnErr) => { if (!cancelled) console.warn('[ClaimForm] Stations fetch error:', stnErr) })
     return () => { cancelled = true }
   }, [])
 
@@ -964,6 +1104,8 @@ export default function ClaimForm({ userId, financialYearId, onSuccess, onCancel
       defaults.operationalStn = profileStnId
     }
     setFields(defaults)
+    setFacts({})
+    setCanonicalPreview(null)
     setBreakdown(null)
     setAdjustedAmount(null)
     setShowCalcLines(null)
@@ -1019,6 +1161,48 @@ export default function ClaimForm({ userId, financialYearId, onSuccess, onCancel
     const n = Number(v)
     return Number.isFinite(n) ? n : null
   }
+
+  // The persistence payload (shared by the canonical preview and submit).
+  const buildRoutingMeta = () => (claimType === 'recalls'
+    ? { home: recallHomeMeta, stn: recallStnMeta }
+    : (claimType === 'standby' || claimType === 'md')
+      ? { standby: standbyTravelMeta }
+      : null)
+
+  const buildSubmitFields = () => {
+    const out = {
+      ...fields,
+      rosteredStn:      stationLabelFor(fields.rosteredStn),
+      recallStn:        stationLabelFor(fields.recallStn),
+      standbyStn:       stationLabelFor(fields.standbyStn),
+      operationalStn:   stationLabelFor(fields.operationalStn),
+      rosteredStnId:    stationIdOrNull(fields.rosteredStn),
+      recallStnId:      stationIdOrNull(fields.recallStn),
+      standbyStnId:     stationIdOrNull(fields.standbyStn),
+      operationalStnId: stationIdOrNull(fields.operationalStn),
+    }
+    if (claimType === 'md' && standbyTravelMeta?.mode === 'home_diff') {
+      out.mdHomeToRosteredKm = standbyTravelMeta.homeToRosteredKm ?? null
+      out.mdHomeToMdKm       = standbyTravelMeta.homeToMdKm ?? null
+      out.mdPayableKm        = standbyTravelMeta.payableKm ?? (Number(fields.distKm) || 0)
+    }
+    return out
+  }
+
+  // Neon: server dry run of the canonical create pipeline (debounced).
+  useEffect(() => {
+    if (!NEON || !date) return undefined
+    let cancelled = false
+    setPreviewLoading(true)
+    const t = setTimeout(() => {
+      callFat('claims.preview', { claimType, date, fields: buildSubmitFields(), facts, routingMeta: buildRoutingMeta() })
+        .then((p) => { if (!cancelled) { setCanonicalPreview(p); setPreviewError(null) } })
+        .catch((e) => { if (!cancelled) setPreviewError(e.message || 'Could not calculate entitlements.') })
+        .finally(() => { if (!cancelled) setPreviewLoading(false) })
+    }, 400)
+    return () => { cancelled = true; clearTimeout(t) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claimType, date, fields, facts, recallHomeMeta, recallStnMeta, standbyTravelMeta, stations])
 
   const handleShowCalc = () => {
     const num = (v) => Number(v) || 0
@@ -1104,6 +1288,30 @@ export default function ClaimForm({ userId, financialYearId, onSuccess, onCancel
     // Retain is hours-first: a claim with generated_hours > 0 is valid. The
     // Maint Stn N/N dollar amount is derived from those hours via the canonical
     // overtime rate. For all other claim types the historical $0 guard applies.
+    if (NEON) {
+      // Canonical: the server generates the entitlements; at least one must
+      // result from the facts entered (no empty claims).
+      if (!canonicalPreview || canonicalPreview.entitlements.length === 0) {
+        setError('No entitlement is generated from the facts entered — complete the times and facts above.'); return
+      }
+      setSubmitting(true)
+      try {
+        await addClaim({
+          userId, claimType, date,
+          fields: buildSubmitFields(),
+          canonicalFacts: facts,
+          routingMeta: buildRoutingMeta(),
+          financialYearId: financialYearId || null,
+        })
+        onSuccess?.()
+      } catch (err) {
+        console.error('[ClaimForm] Submit error:', err)
+        setError(err.message || 'Failed to create claim. Please try again.')
+      } finally {
+        setSubmitting(false)
+      }
+      return
+    }
     if (claimType === 'retain') {
       if (!breakdown || !(breakdown.generatedHours > 0)) {
         setError('Enter shift + booked off time so retain hours can be calculated.'); return
@@ -1232,7 +1440,9 @@ export default function ClaimForm({ userId, financialYearId, onSuccess, onCancel
     ? roundMoney(Number(adjustedAmount))
     : breakdown?.totalAmount ?? 0
 
-  const canSubmit = !submitting && breakdown && breakdown.totalAmount > 0
+  const canSubmit = NEON
+    ? !submitting && !!canonicalPreview && canonicalPreview.entitlements.length > 0
+    : !submitting && breakdown && breakdown.totalAmount > 0
 
   return (
     <form onSubmit={handleSubmit} noValidate>
@@ -1272,9 +1482,15 @@ export default function ClaimForm({ userId, financialYearId, onSuccess, onCancel
         <ShowCalcPanel lines={showCalcLines} onClose={() => setShowCalcLines(null)} />
       )}
 
-      <CalcPreview breakdown={breakdown} rates={rates} onShowCalc={handleShowCalc} />
+      {NEON && (
+        <CanonicalFactsInputs claimType={claimType} shift={fields.shift} facts={facts} onChange={setFacts} />
+      )}
 
-      {breakdown && (
+      {NEON
+        ? <CanonicalPreview preview={canonicalPreview} loading={previewLoading} error={previewError} />
+        : <CalcPreview breakdown={breakdown} rates={rates} onShowCalc={handleShowCalc} />}
+
+      {!NEON && breakdown && (
         <AdjustedAmountField
           calculatedAmount={breakdown.totalAmount}
           adjustedAmount={adjustedAmount}
@@ -1327,7 +1543,9 @@ export default function ClaimForm({ userId, financialYearId, onSuccess, onCancel
           }}>
           {submitting
             ? 'Saving...'
-            : 'Submit - $' + effectiveAmount.toFixed(2) + (adjustedAmount !== null ? ' (Adj)' : '')}
+            : NEON
+              ? `Submit claim${canonicalPreview ? ` — ${canonicalPreview.entitlements.length} entitlement${canonicalPreview.entitlements.length !== 1 ? 's' : ''}` : ''}`
+              : 'Submit - $' + effectiveAmount.toFixed(2) + (adjustedAmount !== null ? ' (Adj)' : '')}
         </button>
       </div>
     </form>

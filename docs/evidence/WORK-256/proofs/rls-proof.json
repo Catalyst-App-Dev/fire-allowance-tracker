@@ -1,0 +1,285 @@
+{
+  "schema": "fat.work256.neon-dev-rls-proof/v1",
+  "at": "2026-10-06T10:28:14.933Z",
+  "identityA": "456de064-7467-4008-ac92-1b3a31b6b49c",
+  "identityB": "0809b559-5175-4d75-aae0-69dce5430eec",
+  "passed": 20,
+  "failed": 0,
+  "checks": [
+    {
+      "name": "unset identity sees no owner-scoped row (all tables)",
+      "ok": true,
+      "detail": {
+        "operational_claims": {
+          "n": 0,
+          "own": 0
+        },
+        "claim_entitlements": {
+          "n": 0,
+          "own": 0
+        },
+        "financial_years": {
+          "n": 0,
+          "own": 0
+        },
+        "profiles": {
+          "n": 0,
+          "own": 0
+        },
+        "profile_ext": {
+          "n": 0,
+          "own": 0
+        },
+        "member_classifications": {
+          "n": 0,
+          "own": 0
+        },
+        "claim_sequences": {
+          "n": 0,
+          "own": 0
+        },
+        "home_address": {
+          "n": 0,
+          "own": 0
+        },
+        "payment_records": {
+          "n": 0,
+          "own": 0
+        },
+        "entitlement_overrides": {
+          "n": 0,
+          "own": 0
+        }
+      }
+    },
+    {
+      "name": "A sees only A rows",
+      "ok": true,
+      "detail": {
+        "operational_claims": {
+          "n": 6,
+          "own": 6
+        },
+        "claim_entitlements": {
+          "n": 14,
+          "own": 14
+        },
+        "financial_years": {
+          "n": 1,
+          "own": 1
+        },
+        "profiles": {
+          "n": 1,
+          "own": 1
+        },
+        "profile_ext": {
+          "n": 1,
+          "own": 1
+        },
+        "member_classifications": {
+          "n": 1,
+          "own": 1
+        },
+        "claim_sequences": {
+          "n": 6,
+          "own": 6
+        },
+        "home_address": {
+          "n": 0,
+          "own": 0
+        },
+        "payment_records": {
+          "n": 0,
+          "own": 0
+        },
+        "entitlement_overrides": {
+          "n": 2,
+          "own": 2
+        }
+      }
+    },
+    {
+      "name": "B sees only B rows",
+      "ok": true,
+      "detail": {
+        "operational_claims": {
+          "n": 1,
+          "own": 1
+        },
+        "claim_entitlements": {
+          "n": 1,
+          "own": 1
+        },
+        "financial_years": {
+          "n": 1,
+          "own": 1
+        },
+        "profiles": {
+          "n": 1,
+          "own": 1
+        },
+        "profile_ext": {
+          "n": 0,
+          "own": 0
+        },
+        "member_classifications": {
+          "n": 0,
+          "own": 0
+        },
+        "claim_sequences": {
+          "n": 1,
+          "own": 1
+        },
+        "home_address": {
+          "n": 0,
+          "own": 0
+        },
+        "payment_records": {
+          "n": 0,
+          "own": 0
+        },
+        "entitlement_overrides": {
+          "n": 0,
+          "own": 0
+        }
+      }
+    },
+    {
+      "name": "A has claims to protect (non-vacuous)",
+      "ok": true,
+      "detail": {
+        "n": 6,
+        "own": 6
+      }
+    },
+    {
+      "name": "B has claims to protect (non-vacuous)",
+      "ok": true,
+      "detail": {
+        "n": 1,
+        "own": 1
+      }
+    },
+    {
+      "name": "A cannot update B claims (0 rows)",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "A cannot delete B entitlements (0 rows)",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "A cannot read B financial years",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "A cannot insert a claim owned by B (RLS 42501)",
+      "ok": true,
+      "detail": {
+        "denied": true,
+        "code": "42501",
+        "message": "new row violates row-level security policy for table \"operational_claims\""
+      }
+    },
+    {
+      "name": "A cannot advance B claim sequence (42501)",
+      "ok": true,
+      "detail": {
+        "denied": true,
+        "code": "42501",
+        "message": "increment_claim_sequence: caller may only advance their own claim sequence"
+      }
+    },
+    {
+      "name": "fat_app has no access to identity links (42501)",
+      "ok": true,
+      "detail": {
+        "denied": true,
+        "code": "42501",
+        "message": "permission denied for table identity_links"
+      }
+    },
+    {
+      "name": "fat_app sees only its own app identity",
+      "ok": true,
+      "detail": [
+        {
+          "id": "456de064-7467-4008-ac92-1b3a31b6b49c"
+        }
+      ]
+    },
+    {
+      "name": "fat_app cannot provision identities (42501)",
+      "ok": true,
+      "detail": {
+        "denied": true,
+        "code": "42501",
+        "message": "permission denied for function ensure_app_identity"
+      }
+    },
+    {
+      "name": "fat_app cannot resolve identities (42501)",
+      "ok": true,
+      "detail": {
+        "denied": true,
+        "code": "42501",
+        "message": "permission denied for function resolve_app_identity"
+      }
+    },
+    {
+      "name": "fat_app_server: no table access without SET ROLE",
+      "ok": true,
+      "detail": {
+        "denied": true,
+        "code": "42501",
+        "message": "permission denied for schema fat"
+      }
+    },
+    {
+      "name": "fat_app_server: cannot SET ROLE fat_service",
+      "ok": true,
+      "detail": {
+        "denied": true,
+        "code": "42501",
+        "message": "permission denied to set role \"fat_service\""
+      }
+    },
+    {
+      "name": "fat_app_server: NOBYPASSRLS, not superuser",
+      "ok": true,
+      "detail": {
+        "rolbypassrls": false,
+        "rolsuper": false
+      }
+    },
+    {
+      "name": "fat_identity_provisioner: no table access without SET ROLE",
+      "ok": true,
+      "detail": {
+        "denied": true,
+        "code": "42501",
+        "message": "permission denied for schema fat"
+      }
+    },
+    {
+      "name": "fat_identity_provisioner: cannot SET ROLE fat_app",
+      "ok": true,
+      "detail": {
+        "denied": true,
+        "code": "42501",
+        "message": "permission denied to set role \"fat_app\""
+      }
+    },
+    {
+      "name": "fat_identity_provisioner: NOBYPASSRLS, not superuser",
+      "ok": true,
+      "detail": {
+        "rolbypassrls": false,
+        "rolsuper": false
+      }
+    }
+  ]
+}

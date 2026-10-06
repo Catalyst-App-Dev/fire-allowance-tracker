@@ -1,0 +1,1592 @@
+{
+  "schema": "fat.work256.neon-dev-e2e/v1",
+  "base": "http://localhost:3001",
+  "run": "muwjdds6",
+  "at": "2026-10-06T10:31:08.661Z",
+  "passed": 87,
+  "failed": 0,
+  "facts": {
+    "identityA": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
+    "identityB": "f98fc224-95d8-4ab9-a44e-d64ddaf76f21",
+    "fyA": "2027FY",
+    "created": {
+      "recalls": {
+        "claimNumber": 1,
+        "claimType": "RC",
+        "entitlements": [
+          "recall_overtime:5.5h",
+          "recall_travel_time:0.75h",
+          "recall_mileage:$63.75",
+          "relieving_allowance:$35.11",
+          "recall_meal:$20.53",
+          "recall_meal:$20.53"
+        ]
+      },
+      "retain": {
+        "claimNumber": 1,
+        "claimType": "RT",
+        "entitlements": [
+          "retain_overtime:4h",
+          "retain_travel_home:0.75h",
+          "retain_meal:$20.53"
+        ]
+      },
+      "standby": {
+        "claimNumber": 1,
+        "claimType": "SB",
+        "entitlements": [
+          "standby_dismi:0.5h",
+          "small_meal:$10.9"
+        ]
+      },
+      "md": {
+        "claimNumber": 1,
+        "claimType": "MD",
+        "entitlements": [
+          "muster_dismis:1h"
+        ]
+      },
+      "spoilt": {
+        "claimNumber": 1,
+        "claimType": "SM",
+        "entitlements": [
+          "spoilt_meal:$20.52"
+        ]
+      },
+      "delayed_meal": {
+        "claimNumber": 1,
+        "claimType": "DM",
+        "entitlements": [
+          "delayed_meal:$20.53"
+        ]
+      }
+    },
+    "listed": {
+      "groups": 7,
+      "rows": 16
+    }
+  },
+  "checks": [
+    {
+      "name": "auth: unauthenticated op → 401",
+      "ok": true,
+      "detail": {
+        "status": 401,
+        "json": {
+          "error": "UNAUTHENTICATED",
+          "message": "sign in required"
+        }
+      }
+    },
+    {
+      "name": "auth: unauthenticated claims.list → 401",
+      "ok": true,
+      "detail": {
+        "status": 401,
+        "json": {
+          "error": "UNAUTHENTICATED",
+          "message": "sign in required"
+        }
+      }
+    },
+    {
+      "name": "auth: sign-up A (synthetic)",
+      "ok": true,
+      "detail": 200
+    },
+    {
+      "name": "auth: A session resolves to an app identity",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "json": {
+          "user": {
+            "id": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
+            "email": "work256-a-muwjdds6@example.invalid",
+            "emailVerified": false
+          }
+        }
+      }
+    },
+    {
+      "name": "auth: sign-up B (synthetic)",
+      "ok": true,
+      "detail": 200
+    },
+    {
+      "name": "identity: concurrent first requests all succeed",
+      "ok": true,
+      "detail": [
+        200,
+        200,
+        200,
+        200,
+        200,
+        200
+      ]
+    },
+    {
+      "name": "identity: concurrent first requests resolve one identity",
+      "ok": true,
+      "detail": [
+        "f98fc224-95d8-4ab9-a44e-d64ddaf76f21"
+      ]
+    },
+    {
+      "name": "identity: A and B map to distinct app identities",
+      "ok": true,
+      "detail": {
+        "idA": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
+        "idB": "f98fc224-95d8-4ab9-a44e-d64ddaf76f21"
+      }
+    },
+    {
+      "name": "auth: session restored on reload (cookie only)",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "json": {
+          "user": {
+            "id": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
+            "email": "work256-a-muwjdds6@example.invalid",
+            "emailVerified": false
+          }
+        }
+      }
+    },
+    {
+      "name": "auth: Neon Auth get-session on reload",
+      "ok": true,
+      "detail": 200
+    },
+    {
+      "name": "auth: sign-out A",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "json": {
+          "success": true
+        }
+      }
+    },
+    {
+      "name": "auth: after sign-out → 401",
+      "ok": true,
+      "detail": {
+        "status": 401,
+        "json": {
+          "error": "UNAUTHENTICATED",
+          "message": "sign in required"
+        }
+      }
+    },
+    {
+      "name": "auth: sign-in A",
+      "ok": true,
+      "detail": 200
+    },
+    {
+      "name": "identity: re-sign-in maps to the SAME app identity",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "json": {
+          "user": {
+            "id": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
+            "email": "work256-a-muwjdds6@example.invalid",
+            "emailVerified": false
+          }
+        }
+      }
+    },
+    {
+      "name": "auth: wrong password refused",
+      "ok": true,
+      "detail": 401
+    },
+    {
+      "name": "auth: tampered/invalid session cookie → 401",
+      "ok": true,
+      "detail": {
+        "status": 401,
+        "json": {
+          "error": "UNAUTHENTICATED",
+          "message": "sign in required"
+        }
+      }
+    },
+    {
+      "name": "identity: non-synthetic e-mail is never provisioned on Neon DEV (403)",
+      "ok": true,
+      "detail": {
+        "signup": 200,
+        "op": {
+          "status": 403,
+          "json": {
+            "error": "NOT_SYNTHETIC",
+            "message": "the Neon DEV backend accepts synthetic test identities only (reserved test e-mail domains)"
+          }
+        }
+      }
+    },
+    {
+      "name": "fy: A load bootstraps exactly one active FY",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "json": {
+          "rows": [
+            {
+              "id": "585941d0-b26b-4caa-9828-bbc70716ce49",
+              "user_id": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
+              "label": "2027FY",
+              "start_date": "2026-07-01",
+              "end_date": "2027-06-30",
+              "is_active": true,
+              "created_at": "2026-10-06T10:29:19.660Z"
+            }
+          ],
+          "active": {
+            "id": "585941d0-b26b-4caa-9828-bbc70716ce49",
+            "user_id": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
+            "label": "2027FY",
+            "start_date": "2026-07-01",
+            "end_date": "2027-06-30",
+            "is_active": true,
+            "created_at": "2026-10-06T10:29:19.660Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "fy: B gets its own FY row",
+      "ok": true,
+      "detail": {
+        "fyA": "585941d0-b26b-4caa-9828-bbc70716ce49",
+        "fyB": "785274f2-244c-4654-a5fd-f47a75e21acd"
+      }
+    },
+    {
+      "name": "profile: A save",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "json": {
+          "ok": true
+        }
+      }
+    },
+    {
+      "name": "profile: A reload shows saved values",
+      "ok": true,
+      "detail": {
+        "home_address": "1 Example St, Testville",
+        "platoon": "B",
+        "pay_number": null,
+        "station_id": 9001,
+        "home_dist_km": 0
+      }
+    },
+    {
+      "name": "isolation: B profile does not see A values",
+      "ok": true,
+      "detail": {
+        "profile": {
+          "first_name": "",
+          "last_name": ""
+        },
+        "ext": null,
+        "stations": [
+          {
+            "id": 9001,
+            "name": "Synthetic Station Alpha",
+            "abbreviation": "SSA",
+            "street_address": null,
+            "suburb": "Example North",
+            "postcode": "0001",
+            "lat": null,
+            "lng": null
+          },
+          {
+            "id": 9002,
+            "name": "Synthetic Station Bravo",
+            "abbreviation": "SSB",
+            "street_address": null,
+            "suburb": "Example South",
+            "postcode": "0002",
+            "lat": null,
+            "lng": null
+          },
+          {
+            "id": 9003,
+            "name": "Synthetic Station Charlie",
+            "abbreviation": "SSC",
+            "street_address": null,
+            "suburb": "Example West",
+            "postcode": "0003",
+            "lat": null,
+            "lng": null
+          }
+        ]
+      }
+    },
+    {
+      "name": "rates: catalog visible",
+      "ok": true,
+      "detail": 14
+    },
+    {
+      "name": "rates: A records a classification",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "json": {
+          "ok": true
+        }
+      }
+    },
+    {
+      "name": "rates: classification history shows it",
+      "ok": true,
+      "detail": [
+        {
+          "id": "b1285e17-efde-4d60-91b7-de0fb25be608",
+          "classification": "lff",
+          "effective_from": "2026-07-01",
+          "source_ref": "WORK-256 synthetic E2E muwjdds6",
+          "created_at": "2026-10-06T10:29:31.001Z"
+        }
+      ]
+    },
+    {
+      "name": "isolation: B does not see A classification",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "stations: reference list visible",
+      "ok": true,
+      "detail": 3
+    },
+    {
+      "name": "claims: preview recalls",
+      "ok": true,
+      "detail": {
+        "claimType": "RC",
+        "entitlements": [
+          {
+            "entitlementType": "recall_overtime",
+            "label": "Recall overtime",
+            "unit": "hours",
+            "amount": null,
+            "hours": 5.5,
+            "estimate": 555.61,
+            "paymentMethod": "payslip",
+            "ruleId": "recall.overtime.v1",
+            "formula": "hours = max(4.0, nearest_quarter_hour(recall_end_at − recall_start_at)); estimate per WORK-246 at ×2",
+            "explanation": "Recall — minimum 4 h at double time (EBA 2020 cl 128.2); actual 5.5 h to the nearest quarter hour (cl 128.1)."
+          },
+          {
+            "entitlementType": "recall_travel_time",
+            "label": "Recall travel time",
+            "unit": "hours",
+            "amount": null,
+            "hours": 0.75,
+            "estimate": 37.88,
+            "paymentMethod": "payslip",
+            "ruleId": "recall.travel_time.v1",
+            "formula": "hours = nearest_quarter_hour(recall_travel_minutes); estimate per WORK-246 at ×1 (×1.5 Sunday / public holiday)",
+            "explanation": "Recall travelling time at ordinary rates for the actual home → recall work location → home trip (EBA 2020 cl 128.4)."
+          },
+          {
+            "entitlementType": "recall_mileage",
+            "label": "Recall mileage",
+            "unit": "dollars",
+            "amount": 63.75,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "recall.mileage.v1",
+            "formula": "amount = round_half_up(travel_distance_km × travel_per_km[claim_date], 2)",
+            "explanation": "Recall mileage: 42.5 km home → recall work location → home × Motor Vehicle / Mileage Allowance (EBA 2020 cl 128.4; Schedule 4 / PR765587)."
+          },
+          {
+            "entitlementType": "relieving_allowance",
+            "label": "Relieving allowance",
+            "unit": "dollars",
+            "amount": 35.11,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "payslip",
+            "ruleId": "recall.relieving.v1",
+            "formula": "amount = relieving_allowance[claim_date] (one per recall shift)",
+            "explanation": "Relieving Allowance — recalled to a work location other than the rostered station, per shift (EBA 2020 cl 85.8.10; Schedule 4 / PR765587)."
+          },
+          {
+            "entitlementType": "recall_meal",
+            "label": "Meal allowance",
+            "unit": "dollars",
+            "amount": 20.53,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.recall.v1",
+            "formula": "amount = meal_allowance[claim_date]",
+            "explanation": "EBA 2020 cl 85.6.3(a): day duty commencing before 10:00, more than 2 h — meal allowance 1 of 2 (Schedule 4 / versioned meal_allowance)."
+          },
+          {
+            "entitlementType": "recall_meal",
+            "label": "Meal allowance",
+            "unit": "dollars",
+            "amount": 20.53,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.recall.v1",
+            "formula": "amount = meal_allowance[claim_date]",
+            "explanation": "EBA 2020 cl 85.6.3(a): day duty commencing before 10:00, more than 2 h — meal allowance 2 of 2 (Schedule 4 / versioned meal_allowance)."
+          }
+        ],
+        "skipped": [],
+        "missingFacts": [],
+        "notes": []
+      }
+    },
+    {
+      "name": "claims: create recalls",
+      "ok": true,
+      "detail": {
+        "claimId": "9d5cb46e-8957-401c-b50f-4e22b601c43a",
+        "claimNumber": 1,
+        "claimType": "RC",
+        "entitlements": [
+          {
+            "entitlementType": "recall_overtime",
+            "label": "Recall overtime",
+            "unit": "hours",
+            "amount": null,
+            "hours": 5.5,
+            "estimate": 555.61,
+            "paymentMethod": "payslip",
+            "ruleId": "recall.overtime.v1",
+            "formula": "hours = max(4.0, nearest_quarter_hour(recall_end_at − recall_start_at)); estimate per WORK-246 at ×2",
+            "explanation": "Recall — minimum 4 h at double time (EBA 2020 cl 128.2); actual 5.5 h to the nearest quarter hour (cl 128.1)."
+          },
+          {
+            "entitlementType": "recall_travel_time",
+            "label": "Recall travel time",
+            "unit": "hours",
+            "amount": null,
+            "hours": 0.75,
+            "estimate": 37.88,
+            "paymentMethod": "payslip",
+            "ruleId": "recall.travel_time.v1",
+            "formula": "hours = nearest_quarter_hour(recall_travel_minutes); estimate per WORK-246 at ×1 (×1.5 Sunday / public holiday)",
+            "explanation": "Recall travelling time at ordinary rates for the actual home → recall work location → home trip (EBA 2020 cl 128.4)."
+          },
+          {
+            "entitlementType": "recall_mileage",
+            "label": "Recall mileage",
+            "unit": "dollars",
+            "amount": 63.75,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "recall.mileage.v1",
+            "formula": "amount = round_half_up(travel_distance_km × travel_per_km[claim_date], 2)",
+            "explanation": "Recall mileage: 42.5 km home → recall work location → home × Motor Vehicle / Mileage Allowance (EBA 2020 cl 128.4; Schedule 4 / PR765587)."
+          },
+          {
+            "entitlementType": "relieving_allowance",
+            "label": "Relieving allowance",
+            "unit": "dollars",
+            "amount": 35.11,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "payslip",
+            "ruleId": "recall.relieving.v1",
+            "formula": "amount = relieving_allowance[claim_date] (one per recall shift)",
+            "explanation": "Relieving Allowance — recalled to a work location other than the rostered station, per shift (EBA 2020 cl 85.8.10; Schedule 4 / PR765587)."
+          },
+          {
+            "entitlementType": "recall_meal",
+            "label": "Meal allowance",
+            "unit": "dollars",
+            "amount": 20.53,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.recall.v1",
+            "formula": "amount = meal_allowance[claim_date]",
+            "explanation": "EBA 2020 cl 85.6.3(a): day duty commencing before 10:00, more than 2 h — meal allowance 1 of 2 (Schedule 4 / versioned meal_allowance)."
+          },
+          {
+            "entitlementType": "recall_meal",
+            "label": "Meal allowance",
+            "unit": "dollars",
+            "amount": 20.53,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.recall.v1",
+            "formula": "amount = meal_allowance[claim_date]",
+            "explanation": "EBA 2020 cl 85.6.3(a): day duty commencing before 10:00, more than 2 h — meal allowance 2 of 2 (Schedule 4 / versioned meal_allowance)."
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "claims: recalls create = preview (same entitlements)",
+      "ok": true,
+      "detail": {
+        "previewTypes": [
+          "recall_meal",
+          "recall_meal",
+          "recall_mileage",
+          "recall_overtime",
+          "recall_travel_time",
+          "relieving_allowance"
+        ],
+        "createdTypes": [
+          "recall_meal",
+          "recall_meal",
+          "recall_mileage",
+          "recall_overtime",
+          "recall_travel_time",
+          "relieving_allowance"
+        ]
+      }
+    },
+    {
+      "name": "claims: preview retain",
+      "ok": true,
+      "detail": {
+        "claimType": "RT",
+        "entitlements": [
+          {
+            "entitlementType": "retain_overtime",
+            "label": "Retain overtime",
+            "unit": "hours",
+            "amount": null,
+            "hours": 4,
+            "estimate": 404.08,
+            "paymentMethod": "payslip",
+            "ruleId": "retain.overtime.v1",
+            "formula": "hours = max(4.0, nearest_quarter_hour(retain_end_at − retain_start_at)); estimate per WORK-246 at ×2",
+            "explanation": "Retained 1.5 h after the rostered shift (60 min or more) — minimum 4 h at double time (EBA 2020 cl 128.5), nearest quarter hour (cl 128.1); notice irrelevant (cl 128.7)."
+          },
+          {
+            "entitlementType": "retain_travel_home",
+            "label": "Travel home",
+            "unit": "hours",
+            "amount": null,
+            "hours": 0.75,
+            "estimate": 37.88,
+            "paymentMethod": "payslip",
+            "ruleId": "retain.travel_home.v1",
+            "formula": "hours = nearest_quarter_hour(retain_travel_home_minutes); estimate per WORK-246 at ×1",
+            "explanation": "Travel allowance: reasonable travelling time to residence after retention following a night shift interrupted by a fire call, incident or fire duty (EBA 2020 cl 85.8.9), at ordinary rate."
+          },
+          {
+            "entitlementType": "retain_meal",
+            "label": "Meal allowance",
+            "unit": "dollars",
+            "amount": 20.53,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.retain.v1",
+            "formula": "amount = meal_allowance[claim_date]",
+            "explanation": "EBA 2020 cl 85.6.4: retained within cl 128.5 (one, a further one once over 2 h, then one at the end of each additional 2 h) — meal allowance 1 of 1 (Schedule 4 / versioned meal_allowance)."
+          }
+        ],
+        "skipped": [],
+        "missingFacts": [],
+        "notes": []
+      }
+    },
+    {
+      "name": "claims: create retain",
+      "ok": true,
+      "detail": {
+        "claimId": "2c3d446e-9baa-4975-897e-5079e8730351",
+        "claimNumber": 1,
+        "claimType": "RT",
+        "entitlements": [
+          {
+            "entitlementType": "retain_overtime",
+            "label": "Retain overtime",
+            "unit": "hours",
+            "amount": null,
+            "hours": 4,
+            "estimate": 404.08,
+            "paymentMethod": "payslip",
+            "ruleId": "retain.overtime.v1",
+            "formula": "hours = max(4.0, nearest_quarter_hour(retain_end_at − retain_start_at)); estimate per WORK-246 at ×2",
+            "explanation": "Retained 1.5 h after the rostered shift (60 min or more) — minimum 4 h at double time (EBA 2020 cl 128.5), nearest quarter hour (cl 128.1); notice irrelevant (cl 128.7)."
+          },
+          {
+            "entitlementType": "retain_travel_home",
+            "label": "Travel home",
+            "unit": "hours",
+            "amount": null,
+            "hours": 0.75,
+            "estimate": 37.88,
+            "paymentMethod": "payslip",
+            "ruleId": "retain.travel_home.v1",
+            "formula": "hours = nearest_quarter_hour(retain_travel_home_minutes); estimate per WORK-246 at ×1",
+            "explanation": "Travel allowance: reasonable travelling time to residence after retention following a night shift interrupted by a fire call, incident or fire duty (EBA 2020 cl 85.8.9), at ordinary rate."
+          },
+          {
+            "entitlementType": "retain_meal",
+            "label": "Meal allowance",
+            "unit": "dollars",
+            "amount": 20.53,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.retain.v1",
+            "formula": "amount = meal_allowance[claim_date]",
+            "explanation": "EBA 2020 cl 85.6.4: retained within cl 128.5 (one, a further one once over 2 h, then one at the end of each additional 2 h) — meal allowance 1 of 1 (Schedule 4 / versioned meal_allowance)."
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "claims: retain create = preview (same entitlements)",
+      "ok": true,
+      "detail": {
+        "previewTypes": [
+          "retain_meal",
+          "retain_overtime",
+          "retain_travel_home"
+        ],
+        "createdTypes": [
+          "retain_meal",
+          "retain_overtime",
+          "retain_travel_home"
+        ]
+      }
+    },
+    {
+      "name": "claims: preview standby",
+      "ok": true,
+      "detail": {
+        "claimType": "SB",
+        "entitlements": [
+          {
+            "entitlementType": "standby_dismi",
+            "label": "Standby & Dismiss",
+            "unit": "hours",
+            "amount": null,
+            "hours": 0.5,
+            "estimate": null,
+            "paymentMethod": "payslip",
+            "ruleId": "standby_dismi.fixed.v1",
+            "formula": "hours = rate_versions.value where code='standby_hours' and effective_from <= claim_date",
+            "explanation": "Standby&Dismi — fixed hours for the standby+dismiss event itself."
+          },
+          {
+            "entitlementType": "small_meal",
+            "label": "Small Meal Allowance",
+            "unit": "dollars",
+            "amount": 10.9,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.small.v1",
+            "formula": "amount = rate_versions.value where code='small_meal' and effective_from <= claim_date",
+            "explanation": "Small Meal Allowance — standby night-shift arrival at or after 19:00."
+          }
+        ],
+        "skipped": [],
+        "missingFacts": [],
+        "notes": []
+      }
+    },
+    {
+      "name": "claims: create standby",
+      "ok": true,
+      "detail": {
+        "claimId": "3ef6f466-10ce-48b9-b1be-0894897d899b",
+        "claimNumber": 1,
+        "claimType": "SB",
+        "entitlements": [
+          {
+            "entitlementType": "standby_dismi",
+            "label": "Standby & Dismiss",
+            "unit": "hours",
+            "amount": null,
+            "hours": 0.5,
+            "estimate": null,
+            "paymentMethod": "payslip",
+            "ruleId": "standby_dismi.fixed.v1",
+            "formula": "hours = rate_versions.value where code='standby_hours' and effective_from <= claim_date",
+            "explanation": "Standby&Dismi — fixed hours for the standby+dismiss event itself."
+          },
+          {
+            "entitlementType": "small_meal",
+            "label": "Small Meal Allowance",
+            "unit": "dollars",
+            "amount": 10.9,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.small.v1",
+            "formula": "amount = rate_versions.value where code='small_meal' and effective_from <= claim_date",
+            "explanation": "Small Meal Allowance — standby night-shift arrival at or after 19:00."
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "claims: standby create = preview (same entitlements)",
+      "ok": true,
+      "detail": {
+        "previewTypes": [
+          "small_meal",
+          "standby_dismi"
+        ],
+        "createdTypes": [
+          "small_meal",
+          "standby_dismi"
+        ]
+      }
+    },
+    {
+      "name": "claims: preview md",
+      "ok": true,
+      "detail": {
+        "claimType": "MD",
+        "entitlements": [
+          {
+            "entitlementType": "muster_dismis",
+            "label": "Muster & Dismiss",
+            "unit": "hours",
+            "amount": null,
+            "hours": 1,
+            "estimate": null,
+            "paymentMethod": "payslip",
+            "ruleId": "muster_dismis.fixed.v1",
+            "formula": "hours = rate_versions.value where code='md_hours' and effective_from <= claim_date",
+            "explanation": "Muster&Dismis — fixed hours for the muster+dismiss event itself."
+          }
+        ],
+        "skipped": [],
+        "missingFacts": [],
+        "notes": []
+      }
+    },
+    {
+      "name": "claims: create md",
+      "ok": true,
+      "detail": {
+        "claimId": "fcba11f6-a820-4b9e-9faf-7f316b9c1c68",
+        "claimNumber": 1,
+        "claimType": "MD",
+        "entitlements": [
+          {
+            "entitlementType": "muster_dismis",
+            "label": "Muster & Dismiss",
+            "unit": "hours",
+            "amount": null,
+            "hours": 1,
+            "estimate": null,
+            "paymentMethod": "payslip",
+            "ruleId": "muster_dismis.fixed.v1",
+            "formula": "hours = rate_versions.value where code='md_hours' and effective_from <= claim_date",
+            "explanation": "Muster&Dismis — fixed hours for the muster+dismiss event itself."
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "claims: md create = preview (same entitlements)",
+      "ok": true,
+      "detail": {
+        "previewTypes": [
+          "muster_dismis"
+        ],
+        "createdTypes": [
+          "muster_dismis"
+        ]
+      }
+    },
+    {
+      "name": "claims: preview spoilt",
+      "ok": true,
+      "detail": {
+        "claimType": "SM",
+        "entitlements": [
+          {
+            "entitlementType": "spoilt_meal",
+            "label": "Spoilt meal allowance",
+            "unit": "dollars",
+            "amount": 20.52,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.spoilt.v1",
+            "formula": "amount = spoilt_meal_allowance[claim_date]",
+            "explanation": "Meal interrupted because of response to an emergency call — Spoilt Meal Allowance (EBA 2020 cl 85.7.1; Schedule 4 / PR765587)."
+          }
+        ],
+        "skipped": [],
+        "missingFacts": [],
+        "notes": []
+      }
+    },
+    {
+      "name": "claims: create spoilt",
+      "ok": true,
+      "detail": {
+        "claimId": "f4d23aa0-5157-4aa6-8801-558a0d7ec6af",
+        "claimNumber": 1,
+        "claimType": "SM",
+        "entitlements": [
+          {
+            "entitlementType": "spoilt_meal",
+            "label": "Spoilt meal allowance",
+            "unit": "dollars",
+            "amount": 20.52,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.spoilt.v1",
+            "formula": "amount = spoilt_meal_allowance[claim_date]",
+            "explanation": "Meal interrupted because of response to an emergency call — Spoilt Meal Allowance (EBA 2020 cl 85.7.1; Schedule 4 / PR765587)."
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "claims: spoilt create = preview (same entitlements)",
+      "ok": true,
+      "detail": {
+        "previewTypes": [
+          "spoilt_meal"
+        ],
+        "createdTypes": [
+          "spoilt_meal"
+        ]
+      }
+    },
+    {
+      "name": "claims: preview delayed_meal",
+      "ok": true,
+      "detail": {
+        "claimType": "DM",
+        "entitlements": [
+          {
+            "entitlementType": "delayed_meal",
+            "label": "Delayed meal allowance",
+            "unit": "dollars",
+            "amount": 20.53,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.delayed.v1",
+            "formula": "amount = meal_allowance[claim_date]",
+            "explanation": "Normal meal break delayed 75 min (more than 30) without 2 hours' prior notice — Meal Allowance (EBA 2020 cl 85.6.6; Schedule 4)."
+          }
+        ],
+        "skipped": [],
+        "missingFacts": [
+          "duty_start_at",
+          "duty_end_at"
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "claims: create delayed_meal",
+      "ok": true,
+      "detail": {
+        "claimId": "2837c0fa-ca19-4e02-a35e-422772132e4f",
+        "claimNumber": 1,
+        "claimType": "DM",
+        "entitlements": [
+          {
+            "entitlementType": "delayed_meal",
+            "label": "Delayed meal allowance",
+            "unit": "dollars",
+            "amount": 20.53,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.delayed.v1",
+            "formula": "amount = meal_allowance[claim_date]",
+            "explanation": "Normal meal break delayed 75 min (more than 30) without 2 hours' prior notice — Meal Allowance (EBA 2020 cl 85.6.6; Schedule 4)."
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "name": "claims: delayed_meal create = preview (same entitlements)",
+      "ok": true,
+      "detail": {
+        "previewTypes": [
+          "delayed_meal"
+        ],
+        "createdTypes": [
+          "delayed_meal"
+        ]
+      }
+    },
+    {
+      "name": "rules RC: overtime 5.5 h (08:00–13:30, ≥4 h min, nearest ¼ h)",
+      "ok": true,
+      "detail": {
+        "entitlementType": "recall_overtime",
+        "label": "Recall overtime",
+        "unit": "hours",
+        "amount": null,
+        "hours": 5.5,
+        "estimate": 555.61,
+        "paymentMethod": "payslip",
+        "ruleId": "recall.overtime.v1",
+        "formula": "hours = max(4.0, nearest_quarter_hour(recall_end_at − recall_start_at)); estimate per WORK-246 at ×2",
+        "explanation": "Recall — minimum 4 h at double time (EBA 2020 cl 128.2); actual 5.5 h to the nearest quarter hour (cl 128.1)."
+      }
+    },
+    {
+      "name": "rules RC: travel time 0.75 h (50 min)",
+      "ok": true,
+      "detail": {
+        "entitlementType": "recall_travel_time",
+        "label": "Recall travel time",
+        "unit": "hours",
+        "amount": null,
+        "hours": 0.75,
+        "estimate": 37.88,
+        "paymentMethod": "payslip",
+        "ruleId": "recall.travel_time.v1",
+        "formula": "hours = nearest_quarter_hour(recall_travel_minutes); estimate per WORK-246 at ×1 (×1.5 Sunday / public holiday)",
+        "explanation": "Recall travelling time at ordinary rates for the actual home → recall work location → home trip (EBA 2020 cl 128.4)."
+      }
+    },
+    {
+      "name": "rules RC: mileage $63.75 (42.5 km × $1.50)",
+      "ok": true,
+      "detail": {
+        "entitlementType": "recall_mileage",
+        "label": "Recall mileage",
+        "unit": "dollars",
+        "amount": 63.75,
+        "hours": null,
+        "estimate": null,
+        "paymentMethod": "petty_cash",
+        "ruleId": "recall.mileage.v1",
+        "formula": "amount = round_half_up(travel_distance_km × travel_per_km[claim_date], 2)",
+        "explanation": "Recall mileage: 42.5 km home → recall work location → home × Motor Vehicle / Mileage Allowance (EBA 2020 cl 128.4; Schedule 4 / PR765587)."
+      }
+    },
+    {
+      "name": "rules RC: relieving allowance (recall stn ≠ rostered)",
+      "ok": true,
+      "detail": [
+        "recall_overtime",
+        "recall_travel_time",
+        "recall_mileage",
+        "relieving_allowance",
+        "recall_meal",
+        "recall_meal"
+      ]
+    },
+    {
+      "name": "rules RC: 2 recall meals (day, before 10:00, > 2 h)",
+      "ok": true,
+      "detail": [
+        {
+          "entitlementType": "recall_overtime",
+          "label": "Recall overtime",
+          "unit": "hours",
+          "amount": null,
+          "hours": 5.5,
+          "estimate": 555.61,
+          "paymentMethod": "payslip",
+          "ruleId": "recall.overtime.v1",
+          "formula": "hours = max(4.0, nearest_quarter_hour(recall_end_at − recall_start_at)); estimate per WORK-246 at ×2",
+          "explanation": "Recall — minimum 4 h at double time (EBA 2020 cl 128.2); actual 5.5 h to the nearest quarter hour (cl 128.1)."
+        },
+        {
+          "entitlementType": "recall_travel_time",
+          "label": "Recall travel time",
+          "unit": "hours",
+          "amount": null,
+          "hours": 0.75,
+          "estimate": 37.88,
+          "paymentMethod": "payslip",
+          "ruleId": "recall.travel_time.v1",
+          "formula": "hours = nearest_quarter_hour(recall_travel_minutes); estimate per WORK-246 at ×1 (×1.5 Sunday / public holiday)",
+          "explanation": "Recall travelling time at ordinary rates for the actual home → recall work location → home trip (EBA 2020 cl 128.4)."
+        },
+        {
+          "entitlementType": "recall_mileage",
+          "label": "Recall mileage",
+          "unit": "dollars",
+          "amount": 63.75,
+          "hours": null,
+          "estimate": null,
+          "paymentMethod": "petty_cash",
+          "ruleId": "recall.mileage.v1",
+          "formula": "amount = round_half_up(travel_distance_km × travel_per_km[claim_date], 2)",
+          "explanation": "Recall mileage: 42.5 km home → recall work location → home × Motor Vehicle / Mileage Allowance (EBA 2020 cl 128.4; Schedule 4 / PR765587)."
+        },
+        {
+          "entitlementType": "relieving_allowance",
+          "label": "Relieving allowance",
+          "unit": "dollars",
+          "amount": 35.11,
+          "hours": null,
+          "estimate": null,
+          "paymentMethod": "payslip",
+          "ruleId": "recall.relieving.v1",
+          "formula": "amount = relieving_allowance[claim_date] (one per recall shift)",
+          "explanation": "Relieving Allowance — recalled to a work location other than the rostered station, per shift (EBA 2020 cl 85.8.10; Schedule 4 / PR765587)."
+        },
+        {
+          "entitlementType": "recall_meal",
+          "label": "Meal allowance",
+          "unit": "dollars",
+          "amount": 20.53,
+          "hours": null,
+          "estimate": null,
+          "paymentMethod": "petty_cash",
+          "ruleId": "meal.recall.v1",
+          "formula": "amount = meal_allowance[claim_date]",
+          "explanation": "EBA 2020 cl 85.6.3(a): day duty commencing before 10:00, more than 2 h — meal allowance 1 of 2 (Schedule 4 / versioned meal_allowance)."
+        },
+        {
+          "entitlementType": "recall_meal",
+          "label": "Meal allowance",
+          "unit": "dollars",
+          "amount": 20.53,
+          "hours": null,
+          "estimate": null,
+          "paymentMethod": "petty_cash",
+          "ruleId": "meal.recall.v1",
+          "formula": "amount = meal_allowance[claim_date]",
+          "explanation": "EBA 2020 cl 85.6.3(a): day duty commencing before 10:00, more than 2 h — meal allowance 2 of 2 (Schedule 4 / versioned meal_allowance)."
+        }
+      ]
+    },
+    {
+      "name": "rules RC: overtime estimate present (classification lff)",
+      "ok": true,
+      "detail": {
+        "entitlementType": "recall_overtime",
+        "label": "Recall overtime",
+        "unit": "hours",
+        "amount": null,
+        "hours": 5.5,
+        "estimate": 555.61,
+        "paymentMethod": "payslip",
+        "ruleId": "recall.overtime.v1",
+        "formula": "hours = max(4.0, nearest_quarter_hour(recall_end_at − recall_start_at)); estimate per WORK-246 at ×2",
+        "explanation": "Recall — minimum 4 h at double time (EBA 2020 cl 128.2); actual 5.5 h to the nearest quarter hour (cl 128.1)."
+      }
+    },
+    {
+      "name": "rules RT: overtime 4 h (90 min ≥ 60 → 4 h minimum)",
+      "ok": true,
+      "detail": {
+        "entitlementType": "retain_overtime",
+        "label": "Retain overtime",
+        "unit": "hours",
+        "amount": null,
+        "hours": 4,
+        "estimate": 404.08,
+        "paymentMethod": "payslip",
+        "ruleId": "retain.overtime.v1",
+        "formula": "hours = max(4.0, nearest_quarter_hour(retain_end_at − retain_start_at)); estimate per WORK-246 at ×2",
+        "explanation": "Retained 1.5 h after the rostered shift (60 min or more) — minimum 4 h at double time (EBA 2020 cl 128.5), nearest quarter hour (cl 128.1); notice irrelevant (cl 128.7)."
+      }
+    },
+    {
+      "name": "rules RT: travel home 0.75 h (night, interrupted, 45 min)",
+      "ok": true,
+      "detail": {
+        "entitlementType": "retain_travel_home",
+        "label": "Travel home",
+        "unit": "hours",
+        "amount": null,
+        "hours": 0.75,
+        "estimate": 37.88,
+        "paymentMethod": "payslip",
+        "ruleId": "retain.travel_home.v1",
+        "formula": "hours = nearest_quarter_hour(retain_travel_home_minutes); estimate per WORK-246 at ×1",
+        "explanation": "Travel allowance: reasonable travelling time to residence after retention following a night shift interrupted by a fire call, incident or fire duty (EBA 2020 cl 85.8.9), at ordinary rate."
+      }
+    },
+    {
+      "name": "rules RT: 1 retain meal",
+      "ok": true,
+      "detail": [
+        {
+          "entitlementType": "retain_overtime",
+          "label": "Retain overtime",
+          "unit": "hours",
+          "amount": null,
+          "hours": 4,
+          "estimate": 404.08,
+          "paymentMethod": "payslip",
+          "ruleId": "retain.overtime.v1",
+          "formula": "hours = max(4.0, nearest_quarter_hour(retain_end_at − retain_start_at)); estimate per WORK-246 at ×2",
+          "explanation": "Retained 1.5 h after the rostered shift (60 min or more) — minimum 4 h at double time (EBA 2020 cl 128.5), nearest quarter hour (cl 128.1); notice irrelevant (cl 128.7)."
+        },
+        {
+          "entitlementType": "retain_travel_home",
+          "label": "Travel home",
+          "unit": "hours",
+          "amount": null,
+          "hours": 0.75,
+          "estimate": 37.88,
+          "paymentMethod": "payslip",
+          "ruleId": "retain.travel_home.v1",
+          "formula": "hours = nearest_quarter_hour(retain_travel_home_minutes); estimate per WORK-246 at ×1",
+          "explanation": "Travel allowance: reasonable travelling time to residence after retention following a night shift interrupted by a fire call, incident or fire duty (EBA 2020 cl 85.8.9), at ordinary rate."
+        },
+        {
+          "entitlementType": "retain_meal",
+          "label": "Meal allowance",
+          "unit": "dollars",
+          "amount": 20.53,
+          "hours": null,
+          "estimate": null,
+          "paymentMethod": "petty_cash",
+          "ruleId": "meal.retain.v1",
+          "formula": "amount = meal_allowance[claim_date]",
+          "explanation": "EBA 2020 cl 85.6.4: retained within cl 128.5 (one, a further one once over 2 h, then one at the end of each additional 2 h) — meal allowance 1 of 1 (Schedule 4 / versioned meal_allowance)."
+        }
+      ]
+    },
+    {
+      "name": "rules SM: spoilt meal allowance",
+      "ok": true,
+      "detail": {
+        "claimId": "f4d23aa0-5157-4aa6-8801-558a0d7ec6af",
+        "claimNumber": 1,
+        "claimType": "SM",
+        "entitlements": [
+          {
+            "entitlementType": "spoilt_meal",
+            "label": "Spoilt meal allowance",
+            "unit": "dollars",
+            "amount": 20.52,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.spoilt.v1",
+            "formula": "amount = spoilt_meal_allowance[claim_date]",
+            "explanation": "Meal interrupted because of response to an emergency call — Spoilt Meal Allowance (EBA 2020 cl 85.7.1; Schedule 4 / PR765587)."
+          }
+        ],
+        "notes": [],
+        "entitlementTypes": [
+          "spoilt_meal"
+        ]
+      }
+    },
+    {
+      "name": "rules DM: delayed meal allowance (75 min > 30, no notice)",
+      "ok": true,
+      "detail": {
+        "claimId": "2837c0fa-ca19-4e02-a35e-422772132e4f",
+        "claimNumber": 1,
+        "claimType": "DM",
+        "entitlements": [
+          {
+            "entitlementType": "delayed_meal",
+            "label": "Delayed meal allowance",
+            "unit": "dollars",
+            "amount": 20.53,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.delayed.v1",
+            "formula": "amount = meal_allowance[claim_date]",
+            "explanation": "Normal meal break delayed 75 min (more than 30) without 2 hours' prior notice — Meal Allowance (EBA 2020 cl 85.6.6; Schedule 4)."
+          }
+        ],
+        "notes": [],
+        "entitlementTypes": [
+          "delayed_meal"
+        ]
+      }
+    },
+    {
+      "name": "rules SB: standby & dismiss generated",
+      "ok": true,
+      "detail": {
+        "claimId": "3ef6f466-10ce-48b9-b1be-0894897d899b",
+        "claimNumber": 1,
+        "claimType": "SB",
+        "entitlements": [
+          {
+            "entitlementType": "standby_dismi",
+            "label": "Standby & Dismiss",
+            "unit": "hours",
+            "amount": null,
+            "hours": 0.5,
+            "estimate": null,
+            "paymentMethod": "payslip",
+            "ruleId": "standby_dismi.fixed.v1",
+            "formula": "hours = rate_versions.value where code='standby_hours' and effective_from <= claim_date",
+            "explanation": "Standby&Dismi — fixed hours for the standby+dismiss event itself."
+          },
+          {
+            "entitlementType": "small_meal",
+            "label": "Small Meal Allowance",
+            "unit": "dollars",
+            "amount": 10.9,
+            "hours": null,
+            "estimate": null,
+            "paymentMethod": "petty_cash",
+            "ruleId": "meal.small.v1",
+            "formula": "amount = rate_versions.value where code='small_meal' and effective_from <= claim_date",
+            "explanation": "Small Meal Allowance — standby night-shift arrival at or after 19:00."
+          }
+        ],
+        "notes": [],
+        "entitlementTypes": [
+          "small_meal",
+          "standby_dismi"
+        ]
+      }
+    },
+    {
+      "name": "rules MD: muster & dismiss generated",
+      "ok": true,
+      "detail": {
+        "claimId": "fcba11f6-a820-4b9e-9faf-7f316b9c1c68",
+        "claimNumber": 1,
+        "claimType": "MD",
+        "entitlements": [
+          {
+            "entitlementType": "muster_dismis",
+            "label": "Muster & Dismiss",
+            "unit": "hours",
+            "amount": null,
+            "hours": 1,
+            "estimate": null,
+            "paymentMethod": "payslip",
+            "ruleId": "muster_dismis.fixed.v1",
+            "formula": "hours = rate_versions.value where code='md_hours' and effective_from <= claim_date",
+            "explanation": "Muster&Dismis — fixed hours for the muster+dismiss event itself."
+          }
+        ],
+        "notes": [],
+        "entitlementTypes": [
+          "muster_dismis"
+        ]
+      }
+    },
+    {
+      "name": "numbering: second recall → next sequential number",
+      "ok": true,
+      "detail": {
+        "first": 1,
+        "second": 2
+      }
+    },
+    {
+      "name": "claims: duplicate spoilt meal event refused (409)",
+      "ok": true,
+      "detail": {
+        "status": 409,
+        "json": {
+          "error": "DUPLICATE_MEAL_EVENT",
+          "message": "this meal event is already claimed"
+        }
+      }
+    },
+    {
+      "name": "claims: list returns every created claim as a group",
+      "ok": true,
+      "detail": 7
+    },
+    {
+      "name": "claims: every child row belongs to a listed group",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "claims: hours rows carry no dollars (hours-first)",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "claims: payment state displayed from canonical (Pending, method set)",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "claims: group label uses claim number",
+      "ok": true,
+      "detail": "Recall #1 (10/09/2026)"
+    },
+    {
+      "name": "override: dollar entitlement with reason",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "json": {
+          "ok": true
+        }
+      }
+    },
+    {
+      "name": "override: refused without a reason",
+      "ok": true,
+      "detail": {
+        "status": 400,
+        "json": {
+          "error": "BAD_REQUEST",
+          "message": "a reason is required for a manual override"
+        }
+      }
+    },
+    {
+      "name": "override: hours entitlement with reason",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "json": {
+          "ok": true
+        }
+      }
+    },
+    {
+      "name": "override: persisted (edited amount, generated kept)",
+      "ok": true,
+      "detail": {
+        "entitlementType": "recall_mileage",
+        "label": "Recall mileage",
+        "unit": "dollars",
+        "generatedAmount": 63.75,
+        "generatedHours": null,
+        "hours": null,
+        "estimate": null,
+        "editedAmount": 60,
+        "editedHours": null,
+        "editedNote": "E2E: corrected km",
+        "manualOverride": true,
+        "ruleId": "recall.mileage.v1",
+        "ruleVersion": "v1",
+        "ruleExplanation": "Recall mileage: 42.5 km home → recall work location → home × Motor Vehicle / Mileage Allowance (EBA 2020 cl 128.4; Schedule 4 / PR765587).",
+        "formulaExplanation": "amount = round_half_up(travel_distance_km × travel_per_km[claim_date], 2)",
+        "paymentStatus": "outstanding",
+        "paymentMethod": "petty_cash",
+        "paymentLinked": false,
+        "quantity": 42.5,
+        "rateValue": 1.5
+      }
+    },
+    {
+      "name": "override: hours persisted (edited 6 h, generated 5.5 h)",
+      "ok": true,
+      "detail": {
+        "entitlementType": "recall_overtime",
+        "label": "Recall overtime",
+        "unit": "hours",
+        "generatedAmount": null,
+        "generatedHours": 5.5,
+        "hours": 6,
+        "estimate": 555.61,
+        "editedAmount": null,
+        "editedHours": 6,
+        "editedNote": "E2E: extended recall",
+        "manualOverride": true,
+        "ruleId": "recall.overtime.v1",
+        "ruleVersion": "v1",
+        "ruleExplanation": "Recall — minimum 4 h at double time (EBA 2020 cl 128.2); actual 5.5 h to the nearest quarter hour (cl 128.1).",
+        "formulaExplanation": "hours = max(4.0, nearest_quarter_hour(recall_end_at − recall_start_at)); estimate per WORK-246 at ×2",
+        "paymentStatus": "pending",
+        "paymentMethod": "payslip",
+        "paymentLinked": false,
+        "quantity": null,
+        "rateValue": null
+      }
+    },
+    {
+      "name": "isolation: B sees none of A claims",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "isolation: B cannot delete A claim (404)",
+      "ok": true,
+      "detail": {
+        "status": 404,
+        "json": {
+          "error": "NOT_FOUND",
+          "message": "claim not found"
+        }
+      }
+    },
+    {
+      "name": "isolation: B cannot override A entitlement (404)",
+      "ok": true,
+      "detail": {
+        "status": 404,
+        "json": {
+          "error": "NOT_FOUND",
+          "message": "entitlement not found"
+        }
+      }
+    },
+    {
+      "name": "isolation: B cannot change A FY state",
+      "ok": true,
+      "detail": "585941d0-b26b-4caa-9828-bbc70716ce49"
+    },
+    {
+      "name": "isolation: B cannot create a claim in A FY (404)",
+      "ok": true,
+      "detail": {
+        "status": 404,
+        "json": {
+          "error": "NOT_FOUND",
+          "message": "financial year not found"
+        }
+      }
+    },
+    {
+      "name": "B: creates its own claim",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "json": {
+          "claimId": "e9d418b7-acff-4396-a504-c34745107691",
+          "claimNumber": 1,
+          "claimType": "SM",
+          "entitlements": [
+            {
+              "entitlementType": "spoilt_meal",
+              "label": "Spoilt meal allowance",
+              "unit": "dollars",
+              "amount": 20.52,
+              "hours": null,
+              "estimate": null,
+              "paymentMethod": "petty_cash",
+              "ruleId": "meal.spoilt.v1",
+              "formula": "amount = spoilt_meal_allowance[claim_date]",
+              "explanation": "Meal interrupted because of response to an emergency call — Spoilt Meal Allowance (EBA 2020 cl 85.7.1; Schedule 4 / PR765587)."
+            }
+          ],
+          "notes": []
+        }
+      }
+    },
+    {
+      "name": "isolation: A does not see B claim",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "isolation: A cannot delete B claim (404)",
+      "ok": true,
+      "detail": {
+        "status": 404,
+        "json": {
+          "error": "NOT_FOUND",
+          "message": "claim not found"
+        }
+      }
+    },
+    {
+      "name": "isolation: browser-supplied userId is ignored",
+      "ok": true,
+      "detail": {
+        "user": {
+          "id": "4f4f539f-1ab1-4de0-948f-e5f686e967a0",
+          "email": "work256-a-muwjdds6@example.invalid",
+          "emailVerified": false
+        }
+      }
+    },
+    {
+      "name": "delete: A deletes own claim",
+      "ok": true,
+      "detail": {
+        "status": 200,
+        "json": {
+          "ok": true
+        }
+      }
+    },
+    {
+      "name": "delete: claim gone after reload",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "payments dark: payslip extract route 404 on Neon",
+      "ok": true,
+      "detail": {
+        "status": 404,
+        "json": {
+          "ok": false,
+          "code": "not_found"
+        }
+      }
+    },
+    {
+      "name": "payments dark: payslip availability probe 404 on Neon",
+      "ok": true,
+      "detail": {
+        "status": 404,
+        "json": {
+          "ok": false,
+          "code": "not_found"
+        }
+      }
+    },
+    {
+      "name": "surface: unknown/payments op → 404",
+      "ok": true,
+      "detail": {
+        "status": 404,
+        "json": {
+          "error": "NOT_FOUND",
+          "message": "unknown operation"
+        }
+      }
+    },
+    {
+      "name": "surface: prototype key is not an op (404)",
+      "ok": true,
+      "detail": {
+        "status": 404,
+        "json": {
+          "error": "NOT_FOUND",
+          "message": "unknown operation"
+        }
+      }
+    },
+    {
+      "name": "travel: unauthenticated → 401",
+      "ok": true,
+      "detail": {
+        "status": 401,
+        "json": {
+          "ok": false,
+          "code": "invalid_token",
+          "message": "Not authenticated."
+        }
+      }
+    },
+    {
+      "name": "travel: Neon session authenticates (not 401/403)",
+      "ok": true,
+      "detail": 200
+    }
+  ]
+}

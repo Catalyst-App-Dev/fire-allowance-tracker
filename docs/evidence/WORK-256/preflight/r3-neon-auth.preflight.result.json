@@ -1,0 +1,17 @@
+{
+  "decision": "allow",
+  "role": "dev",
+  "requiresClearance": false,
+  "binding": {
+    "app": "fire-allowance-tracker",
+    "provider": "neon",
+    "project": "cool-meadow-70196410",
+    "target": "dev",
+    "targetId": "br-wispy-dew-a7vd4v6k",
+    "role": "dev",
+    "backend": "owned",
+    "operation": "auth-config",
+    "change": "fat-dev-neon-auth-20261006"
+  },
+  "reasons": []
+}

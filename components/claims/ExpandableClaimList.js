@@ -23,6 +23,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState } from 'react'
+import { isCanonicalRow, isHoursRow, formatHours, totalHours, describeMissingFacts } from '@/lib/claims/canonical/display'
 import { useClaims } from '@/lib/claims/ClaimsContext'
 import { CLAIM_TYPE_LABELS } from '@/lib/claims/claimTypes'
 import {
@@ -78,6 +79,7 @@ function resolveComponentAmount(claim) {
 }
 
 function resolveChildLabel(claim) {
+  if (claim.canonical?.label) return claim.canonical.label
   const ai = claim.calculation_inputs || {}
   if (ai.autoChild === 'callback_ops')             return 'OPS Callback'
   if (ai.autoChild === 'excess_travel')             return 'Excess Travel'
@@ -196,7 +198,7 @@ function resolvePaymentStream(claim) {
 // ─── SubClaimGroupHeader ────────────────────────────────────────────────────────
 // Compact payment-stream section label: chip (icon + name + count) + stream subtotal.
 
-function SubClaimGroupHeader({ stream, count, subtotal }) {
+function SubClaimGroupHeader({ stream, count, subtotal, hours = 0 }) {
   const meta = STREAM_META[stream] || STREAM_META[STREAM.UNASSIGNED]
   return (
     <div style={{
@@ -225,7 +227,11 @@ function SubClaimGroupHeader({ stream, count, subtotal }) {
         <span style={{ opacity: 0.7, fontWeight: 600 }}>· {count}</span>
       </span>
       <span style={{ fontSize: '0.72rem', color: '#6b7280', fontVariantNumeric: 'tabular-nums', flexShrink: 0 }}>
-        ${subtotal.toFixed(2)}
+        {/* Hours-first: canonical hours rows carry no dollar amount, so a pure-hours
+            stream shows its hours rather than a misleading $0.00. */}
+        {hours > 0
+          ? (subtotal > 0 ? `$${subtotal.toFixed(2)} + ${formatHours(hours)}` : formatHours(hours))
+          : `$${subtotal.toFixed(2)}`}
       </span>
     </div>
   )
@@ -350,8 +356,9 @@ function QuickPayToggle({ claim, session, activeFY }) {
 
   const isPaid = (claim.payment_status || '').toLowerCase() === 'paid'
 
-  // Only visible for unpaid subclaims
-  if (isPaid) return null
+  // Only visible for unpaid subclaims. Canonical (Neon) rows: payment state is
+  // read-only — it comes from canonical payment records, never a toggle.
+  if (isPaid || isCanonicalRow(claim)) return null
 
   // Payslip-method rows require a Pay Number at mark-as-paid time. If one
   // hasn't been captured yet, open the modal to collect it. Petty Cash rows
@@ -430,8 +437,9 @@ function QuickPayToggle({ claim, session, activeFY }) {
 // For legacy rows (payment_status = null), treat as Pending (no fallback to status).
 // The status field is preserved on the row but is NOT used for payment display.
 
-function SubClaimRow({ claim, session, activeFY, isLast }) {
+function SubClaimRow({ claim, session, activeFY, isLast, onEdit }) {
   const { deleteSubClaim } = useClaims()
+  const canonical = isCanonicalRow(claim)
   const [showDelete, setShowDelete] = useState(false)
   const label  = resolveChildLabel(claim)
   const amt    = resolveComponentAmount(claim)
@@ -508,10 +516,15 @@ function SubClaimRow({ claim, session, activeFY, isLast }) {
           color: displayPaid ? '#6b7280' : '#f9fafb',
           fontVariantNumeric: 'tabular-nums',
         }}>
-          ${amt.toFixed(2)}
+          {isHoursRow(claim) ? formatHours(claim.canonical.hours) : `$${amt.toFixed(2)}`}
         </span>
+        {isHoursRow(claim) && claim.canonical.estimate != null && (
+          <span title="Estimate only — hours are the entitlement; payroll determines the dollars" style={{ fontSize: '0.66rem', color: '#6b7280' }}>
+            ≈ ${Number(claim.canonical.estimate).toFixed(2)} est.
+          </span>
+        )}
         {/* Manual override indicator — amount was edited away from the generated value */}
-        {isAmountAdjusted(claim) && (
+        {(canonical ? claim.canonical.manualOverride : isAmountAdjusted(claim)) && (
           <span
             title="Amount manually adjusted"
             style={{
@@ -532,7 +545,20 @@ function SubClaimRow({ claim, session, activeFY, isLast }) {
         {/* CANONICAL: always show PaymentStatusBadge from payment_status */}
         <PaymentStatusBadge paymentStatus={claim.payment_status || 'Pending'} />
         <QuickPayToggle claim={claim} session={session} activeFY={activeFY} />
-        <button
+        {canonical && onEdit && !claim.canonical.paymentLinked && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(claim) }}
+            title="Edit this entitlement (audited override with a reason)"
+            style={{
+              padding: '3px 8px', borderRadius: '6px', border: '1px solid #374151',
+              background: 'transparent', color: '#9ca3af', fontSize: '0.7rem', fontWeight: 700,
+              cursor: 'pointer', flexShrink: 0, lineHeight: 1,
+            }}
+          >
+            Edit
+          </button>
+        )}
+        {!canonical && <button
           onClick={(e) => { e.stopPropagation(); setShowDelete(true) }}
           title="Delete this sub-claim"
           aria-label="Delete sub-claim"
@@ -550,7 +576,7 @@ function SubClaimRow({ claim, session, activeFY, isLast }) {
           }}
         >
           🗑
-        </button>
+        </button>}
       </div>
       {showDelete && (
         <DeleteConfirmModal
@@ -669,6 +695,11 @@ function ExpandableGroupRow({ groupEntry, onEdit, session, activeFY }) {
               }}>
                 ${totalAmt.toFixed(2)}
               </span>
+              {totalHours(children) > 0 && (
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#d1d5db', fontVariantNumeric: 'tabular-nums' }}>
+                  + {formatHours(totalHours(children))}
+                </span>
+              )}
               <span style={{ fontSize: '0.71rem', color: '#6b7280' }}>
                 {children.length} item{children.length !== 1 ? 's' : ''}
               </span>
@@ -751,7 +782,7 @@ function ExpandableGroupRow({ groupEntry, onEdit, session, activeFY }) {
                     marginBottom: '2px',
                   }}
                 >
-                  <SubClaimGroupHeader stream={stream} count={rows.length} subtotal={subtotal} />
+                  <SubClaimGroupHeader stream={stream} count={rows.length} subtotal={subtotal} hours={totalHours(rows)} />
                   {rows.map((child, i) => (
                     <SubClaimRow
                       key={`${child.claimType}-${child.id}`}
@@ -759,6 +790,7 @@ function ExpandableGroupRow({ groupEntry, onEdit, session, activeFY }) {
                       session={session}
                       activeFY={activeFY}
                       isLast={i === rows.length - 1}
+                      onEdit={onEdit}
                     />
                   ))}
                 </div>
@@ -766,9 +798,18 @@ function ExpandableGroupRow({ groupEntry, onEdit, session, activeFY }) {
             })
           )}
 
+          {group.canonical?.missingFacts?.length > 0 && (
+            <p style={{ fontSize: '0.72rem', color: '#9ca3af', margin: '8px 0 0' }}>
+              Some entitlements were not generated because these facts were not recorded: {describeMissingFacts(group.canonical.missingFacts)}.
+            </p>
+          )}
+          {group.canonical?.notes && (
+            <p style={{ fontSize: '0.72rem', color: '#6b7280', margin: '6px 0 0' }}>{group.canonical.notes}</p>
+          )}
+
           {/* Edit + Delete buttons in expanded footer */}
           <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #1e1e1e', display: 'flex', gap: '8px' }}>
-            {onEdit && children.length > 0 && (
+            {onEdit && children.length > 0 && !group.canonical && (
               <button
                 onClick={(e) => { e.stopPropagation(); onEdit(children[0]) }}
                 style={{
@@ -806,7 +847,9 @@ function ExpandableGroupRow({ groupEntry, onEdit, session, activeFY }) {
       {showDelete && (
         <DeleteConfirmModal
           title="Delete Claim"
-          message={`Permanently delete “${group.label}” and all ${children.length} sub-claim${children.length !== 1 ? 's' : ''}? This removes the claim, every generated entitlement and any linked payment records. This cannot be undone.`}
+          message={group.canonical
+            ? `Permanently delete “${group.label}” and its ${children.length} generated entitlement${children.length !== 1 ? 's' : ''}? Claims with linked payment records cannot be deleted. This cannot be undone.`
+            : `Permanently delete “${group.label}” and all ${children.length} sub-claim${children.length !== 1 ? 's' : ''}? This removes the claim, every generated entitlement and any linked payment records. This cannot be undone.`}
           confirmLabel="Delete Claim"
           onClose={() => setShowDelete(false)}
           onConfirm={async () => {
