@@ -1,0 +1,10 @@
+{
+ "neon_main_br-red-credit-a77927m4": {
+  "before": {"read_at":"2026-10-06T06:56:47Z","schemas":["public"],"relations":0,"functions":0,"extensions":["plpgsql"],"fat_roles":0,"event_triggers":0},
+  "after":  {"read_at":"2026-10-06T07:33:18.362Z","schemas":["public"],"relations":0,"functions":0,"extensions":["plpgsql"],"fat_roles":0,"event_triggers":0}
+ },
+ "supabase_dev_kctctvpobbizhkiqkgqw": {
+  "before": {"read_at":"2026-10-06T06:56:41Z","claim_groups":{"rows":0,"md5":"d41d8cd98f00b204e9800998ecf8427e"},"recalls":{"rows":0,"md5":"d41d8cd98f00b204e9800998ecf8427e"},"retain":{"rows":0,"md5":"d41d8cd98f00b204e9800998ecf8427e"},"standby":{"rows":0,"md5":"d41d8cd98f00b204e9800998ecf8427e"},"spoilt_meals":{"rows":0,"md5":"d41d8cd98f00b204e9800998ecf8427e"},"claim_sequences":{"rows":5,"md5":"25795edba523af32cae51ebc025646b9"},"financial_years":{"rows":2,"md5":"af65a2cb99322e612f987826ac701317"},"operational_claims":{"rows":4,"md5":"84eb79738f736d4494b11a5bd78ecadf"},"migration_batches":{"rows":2,"md5":"e151553a289a28576a407b2d95fbf545"}},
+  "after": "NOT RE-READ: the Supabase connector began returning 'FGA Authentication Error. Unauthorized' for every call (execute_sql and list_projects) at 07:33Z. Read-only status rests on supabase-call-audit.txt: every Supabase call in the session is listed there and none carries a write keyword; Supabase PROD (wgcqzamuspuqpedqasbc) was never addressed."
+ }
+}

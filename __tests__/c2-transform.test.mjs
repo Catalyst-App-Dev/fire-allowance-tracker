@@ -14,10 +14,11 @@ import fs from 'node:fs'
 
 import { FIXTURE_CATALOG, FIXTURE_LFF_HISTORY } from '../lib/fat/rates/fixtureCatalog.js'
 import {
-  planC2, applySql, verifySql, rollbackSql, checkVerify, bindFixture, mutateSourceForConflict, canonicalJson,
+  planC2, applySql, verifySql, rollbackSql, bindFixture, mutateSourceForConflict, canonicalJson,
 } from '../lib/fat/migration/c2/index.js'
 import { melbourneInstant, melbourneInterval, uuidv5 } from '../lib/fat/migration/c2/util.js'
 import { INTENDED_DIFFERENCES } from '../lib/fat/migration/c2/constants.js'
+import { planCross } from './helpers/c2-cross.mjs'
 
 const OWNER = '11111111-1111-4111-8111-111111111111'
 const OTHER = '33333333-3333-4333-8333-333333333333'
@@ -169,7 +170,7 @@ test('manual adjustments go through the audited override path (insert, then edit
     const e = p.entitlements.find((x) => x.id === a.id)
     assert.notEqual(e.generated_amount, a.edited_amount) // generation fields stay the stored value
   }
-  const sql = applySql(p)
+  const sql = applySql(planCross(synthetic()).plan)
   assert.match(sql, /update fat\.claim_entitlements set edited_amount = re\.edited_amount/)
 })
 
@@ -256,22 +257,25 @@ test('source change → same target ids with different content (the DB equivalen
   const ea = a.plan.entitlements.find((e) => e.entitlement_type === 'spoilt_meal' && e.generated_amount === 10.9 && !a.plan.adjustments.some((x) => x.id === e.id))
   const eb = b.plan.entitlements.find((e) => e.id === ea.id)
   assert.notEqual(eb.generated_amount, ea.generated_amount)
-  const sql = applySql(b.plan)
+  const sql = applySql(planCross(mutateSourceForConflict(synthetic())).plan)
   assert.match(sql, /raise exception 'C2 conflict: claim_entitlements % differs/)
   assert.match(sql, /on conflict do nothing/)
 })
 
 test('apply refuses to emit SQL when acceptance gates fail; batch keys are validated', () => {
-  const { plan: p } = plan(bindFixture(fixture('anomaly-source.json'), envSnapshot()))
+  const { plan: p } = planCross(bindFixture(fixture('anomaly-source.json'), envSnapshot()))
   assert.throws(() => applySql(p), /apply refused/)
-  assert.throws(() => verifySql("x'; drop table fat.recalls; --"), /unsafe batch key/)
-  assert.match(rollbackSql('c2:dev:1.0.0:abc'), /where batch_key = 'c2:dev:1\.0\.0:abc'/)
+  const ok = planCross(synthetic()).plan
+  assert.throws(() => verifySql({ ...ok, batch_key: "x'; drop table fat.recalls; --" }), /unsafe batch key/)
+  assert.match(rollbackSql(ok), new RegExp(`where batch_key = '${ok.batch_key.replace(/\./g, '\\.')}'`))
+  // SQL is only emitted for a cross-database plan (the prototype source is never in the target database).
+  assert.throws(() => applySql(plan(synthetic()).plan), /cross-database plan/)
 })
 
 test('plan data enters SQL as one dollar-quoted literal (quotes in notes are inert)', () => {
   const snap = synthetic()
   snap.source.recalls.find((r) => r.claim_number === 1).notes = "O'Brien's $$ note; drop table x; --"
-  const { plan: p } = plan(snap)
+  const { plan: p } = planCross(snap)
   const sql = applySql(p)
   const tag = sql.match(/c2_plan_text text := (\$c2plan_[0-9a-f]{12}\$)/)[1]
   assert.equal(sql.split(tag).length, 3)
@@ -315,7 +319,7 @@ test('empty source (DEV reality) plans an empty, passing batch', () => {
   assert.equal(report.outcome, 'pass')
   assert.equal(p.claims.length, 0)
   assert.equal(report.evidence_class, 'real')
-  assert.match(applySql(p), /do \$c2apply\$/)
+  assert.match(applySql(planCross(snap, { evidenceClass: 'real' }).plan), /do \$c2apply\$/)
 })
 
 test('Melbourne wall time: offsets, next-day roll, DST gaps/overlaps fail closed', () => {
@@ -330,29 +334,16 @@ test('Melbourne wall time: offsets, next-day roll, DST gaps/overlaps fail closed
   assert.ok(dst.notes.some((n) => /DST/.test(n)))
 })
 
-test('checkVerify accepts a clean verify and names every failing check', () => {
-  const { report } = plan(synthetic())
-  const clean = {
-    batch: { status: 'completed', outcome: 'pass' }, gate5_totals: { dollars_source: 1, dollars_target: 1, hours_source: 2, hours_target: 2 },
-    gate2_number_or_fy_mismatch: 0, gate2_scope_duplicates: 0, gate3_bad_detail: 0, gate3_parents_without_claim: 0, gate4_child_violations: 0,
-    gate5_missing_source_rows: 0, gate5_value_mismatches: 0, gate5_adjustment_mismatches: 0, gate7_cross_owner_entitlements: 0, gate7_cross_owner_fy: 0,
-    gate7_ledger_orphan_or_cross_owner: 0, gate7_orphan_details: 0, gate7_payment_links_cross_owner_or_stream: 0, gate7_rls_disabled: 0, gate7_api_privileges_on_migration_tables: 0,
-    gate6_source_invalid: 0, gate6_paid_without_exactly_one_migration_link: 0, gate6_unpaid_with_links: 0, gate6_allocation_mismatches: 0,
-    gate6_record_date_mismatches: 0, gate6_status_mismatches: 0, gate6_audit_mismatches: 0, gate6_unlinked_migration_records: 0, gate6_duplicate_source_keys: 0,
-    gate6_totals: { source_paid_entitlements: 1, source_paid_amount: 5, migration_records: 1, links_on_lineage: 1, allocated_amount: 5 },
-  }
-  assert.equal(checkVerify(report, clean).ok, true)
-  const bad = checkVerify(report, { ...clean, gate5_value_mismatches: 2, gate7_rls_disabled: 1 })
-  assert.deepEqual(bad.failures, ['gate5_value_mismatches = 2', 'gate7_rls_disabled = 1'])
-})
-
 test('apply SQL returns the SHA-256 of the exact plan text it embeds', async () => {
   const { planSha256 } = await import('../lib/fat/migration/c2/index.js')
   const { createHash } = await import('node:crypto')
-  const { plan: p } = plan(synthetic())
+  const { plan: p } = planCross(synthetic())
   const sql = applySql(p)
   const tag = sql.match(/c2_plan_text text := (\$c2plan_[0-9a-f]{12}\$)/)[1]
   const embedded = sql.split(tag)[1]
   assert.equal(createHash('sha256').update(embedded, 'utf8').digest('hex'), planSha256(p))
-  assert.match(sql, /'plan_sha256', encode\(sha256\(convert_to\(c2_plan_text, 'UTF8'\)\), 'hex'\)/)
+  assert.match(sql, /c2_plan_sha text := encode\(sha256\(convert_to\(c2_plan_text, 'UTF8'\)\), 'hex'\)/)
+  assert.match(sql, /'plan_sha256', c2_plan_sha/)
+  // Transport guard: a corrupted embedded plan is refused before anything is written.
+  assert.ok(sql.indexOf(`if c2_plan_sha <> '${planSha256(p)}' then`) < sql.indexOf('insert into'))
 })

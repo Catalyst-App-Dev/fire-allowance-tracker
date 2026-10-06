@@ -124,8 +124,9 @@ allocated_amount, allocated_by_owner_type_fy, entitlement_status}`;
 `planned.payment_links` count the plan. Gate 7 additionally counts orphan and cross-owner
 payment links.
 
-The verify query re-derives gate 6 from the database alone (prototype rows + canonical
-tables): source states, exactly-one migration link per paid entitlement, no link on an unpaid
+The verify query re-derives gate 6 from the database alone (since tool 2.0.0, WORK-255: the
+source rows' canonical JSON embedded in `verify.sql` and checksum-proved by the target, plus
+canonical tables — no prototype table is read): source states, exactly-one migration link per paid entitlement, no link on an unpaid
 one, allocation and gross, Melbourne record date, derived status, exactly one audit per link,
 no unlinked migration record, no duplicate key, and the totals; `check` compares them.
 
@@ -160,6 +161,10 @@ cascade), then entitlements (audit rows cascade) and claims.
   unpaid, adjusted-and-paid, hours-first paid, mixed claims, Melbourne date roll-over, pay-number
   reference and a paid container parent. Contradictory evidence is proved at plan level (no apply
   SQL exists for it).
+
+Since tool 2.0.0 (WORK-255) the rehearsal is cross-database: the synthetic source is planned
+against a Neon `dev` target snapshot and applied there under governed preflight / verify-applied
+(C2 contract § 11). The payment mapping, link, audit and recompute rules above are **unchanged**.
 
 ## 9. Security and boundaries
 

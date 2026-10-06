@@ -1,0 +1,27 @@
+{
+ "target": {
+  "app": "fire-allowance-tracker",
+  "provider": "neon",
+  "project": "cool-meadow-70196410",
+  "target": "dev",
+  "targetId": "br-wispy-dew-a7vd4v6k",
+  "role": "dev",
+  "backend": "owned",
+  "operation": "data-load"
+ },
+ "change": "fat-c2-dev-aa94c57f6f2223bb22f1cd77",
+ "observed": {
+  "adapter": "neon",
+  "raw": {
+   "id": "br-wispy-dew-a7vd4v6k",
+   "project_id": "cool-meadow-70196410",
+   "name": "dev",
+   "parent_id": "br-red-credit-a77927m4"
+  }
+ },
+ "applied": [
+  "fat-c2-dev-c7dd894ad0445e4a573d746a",
+  "fat-dev-synthetic-20261006"
+ ],
+ "readAt": "2026-10-06T07:21:11.436Z"
+}

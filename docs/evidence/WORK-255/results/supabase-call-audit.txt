@@ -1,0 +1,7 @@
+1 2026-10-06T06:32:37.744Z mcp__Supabase__execute_sql kctctvpobbizhkiqkgqw write-keywords: none | {"project_id": "kctctvpobbizhkiqkgqw", "query": "select (select count(*) from fat.claim_groups) cg, (select count(*) from fat.recalls) rc, (select count(*) from
+2 2026-10-06T06:56:41.896Z mcp__Supabase__execute_sql kctctvpobbizhkiqkgqw write-keywords: none | {"project_id": "kctctvpobbizhkiqkgqw", "query": "select jsonb_object_agg(t, jsonb_build_object('rows', n, 'md5', h)) as baseline from (\n select 'claim_groups' 
+3 2026-10-06T06:57:06.668Z mcp__Supabase__execute_sql kctctvpobbizhkiqkgqw write-keywords: none | {"project_id": "kctctvpobbizhkiqkgqw", "query": "-- C2/C3 cross-database SOURCE extraction (WORK-255). Runs on the legacy SUPABASE project. Read-only.\nselect (
+4 2026-10-06T07:33:33.117Z mcp__Supabase__execute_sql kctctvpobbizhkiqkgqw write-keywords: none | {"project_id": "kctctvpobbizhkiqkgqw", "query": "select now() as read_at, (select jsonb_object_agg(t, jsonb_build_object('rows', n, 'md5', h)) from (\n select '
+5 2026-10-06T07:33:40.115Z mcp__Supabase__execute_sql kctctvpobbizhkiqkgqw write-keywords: none | {"project_id": "kctctvpobbizhkiqkgqw", "query": "select now() as read_at, (select jsonb_object_agg(t, jsonb_build_object('rows', n, 'md5', h)) from (\n select '
+6 2026-10-06T07:33:46.041Z mcp__Supabase__list_projects None write-keywords: none | {}
+total 6

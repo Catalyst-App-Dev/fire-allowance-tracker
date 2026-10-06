@@ -15,10 +15,11 @@ import fs from 'node:fs'
 
 import { FIXTURE_CATALOG, FIXTURE_LFF_HISTORY } from '../lib/fat/rates/fixtureCatalog.js'
 import {
-  planC2, applySql, verifySql, syntheticHarnessSql, bindFixture, mutateSourceForConflict, mutateSourceForPaymentChange,
+  planC2, applySql, verifySql, rollbackSql, bindFixture, mutateSourceForPaymentChange,
   canonicalJson, sourcePaymentState, paymentSourceKey, paymentRecordId,
 } from '../lib/fat/migration/c2/index.js'
 import { uuidv5, melbourneDate } from '../lib/fat/migration/c2/util.js'
+import { planCross } from './helpers/c2-cross.mjs'
 
 const OWNER = '11111111-1111-4111-8111-111111111111'
 const FY = '22222222-2222-4222-8222-222222222222'
@@ -205,7 +206,7 @@ test('contradictory or insufficient evidence fails gate 6 closed: no apply SQL, 
     assert.deepEqual(report.payments.failures.map((f) => f.code), [code])
     assert.equal(gate6(report).evidence.genuine_failures, 1)
     assert.equal(p.payment_links.some((l) => l.entitlement_id === entFor(p, table, n)[0].id), false) // never silently chosen
-    assert.throws(() => applySql(p), /acceptance gates fail \(6\)/)
+    assert.throws(() => applySql(planCross(snap).plan), /acceptance gates fail \(6\)/)
   }
 })
 
@@ -244,7 +245,7 @@ test('identical input → byte-identical report and plan (payments included); ke
   const b = plan(shuffled)
   assert.equal(canonicalJson(a.report), canonicalJson(b.report))
   assert.equal(canonicalJson(a.plan), canonicalJson(b.plan))
-  assert.equal(applySql(a.plan), applySql(b.plan))
+  assert.equal(applySql(planCross(synthetic()).plan), applySql(planCross(shuffled).plan))
 })
 
 test('changed payment source (paid → unpaid): same ids, one record fewer, status reverts → the DB proof must raise', () => {
@@ -260,7 +261,7 @@ test('changed payment source (paid → unpaid): same ids, one record fewer, stat
 })
 
 test('apply SQL: insert-if-absent records, link only with a newly inserted record, every proof raises (fail closed)', () => {
-  const { plan: p } = plan(synthetic())
+  const { plan: p } = planCross(synthetic())
   const sql = applySql(p)
   assert.match(sql, /insert into fat\.payment_records \(id, owner_id, stream, record_date, reference, gross_amount, raw_payload, source, migration_source_key, migration_batch_id\)/)
   assert.match(sql, /on conflict do nothing;\s+get diagnostics n = row_count; ins_pay/)
@@ -278,23 +279,21 @@ test('apply SQL: insert-if-absent records, link only with a newly inserted recor
   assert.doesNotMatch(sql, /create_payment_record/)
 })
 
-test('verify SQL re-derives gate 6 from the prototype source and canonical tables', () => {
-  const v = verifySql('c2:dev:1.1.0:abc')
+test('verify SQL re-derives gate 6 from the embedded source snapshot and canonical tables (no prototype table)', () => {
+  const { plan: p } = planCross(synthetic())
+  const v = verifySql(p)
   for (const k of ['gate6_source_invalid', 'gate6_paid_without_exactly_one_migration_link', 'gate6_unpaid_with_links', 'gate6_allocation_mismatches',
     'gate6_record_date_mismatches', 'gate6_status_mismatches', 'gate6_audit_mismatches', 'gate6_unlinked_migration_records', 'gate6_duplicate_source_keys', 'gate6_totals']) {
     assert.match(v, new RegExp(`'${k}'`))
   }
   assert.match(v, /at time zone 'Australia\/Melbourne'/)
+  assert.doesNotMatch(v, /from fat\.(recalls|retain|standby|spoilt_meals|claim_groups)\b/)
 })
 
-test('synthetic harness covers C3 tamper and changed-payment steps and resets payment records', () => {
-  const x = synthetic()
-  const sql = syntheticHarnessSql({
-    fixtureSource: x.source, planA: plan(x).plan, planB: plan(mutateSourceForConflict(x)).plan, planC: plan(mutateSourceForPaymentChange(x)).plan,
-  })
-  assert.match(sql, /for step in 1\.\.7 loop/)
-  assert.match(sql, /if step = 5 then update fat\.payment_records set gross_amount = gross_amount \+ 1/)
-  assert.match(sql, /if step = 6 then delete from fat\.entitlement_payment_links/)
-  assert.match(sql, /delete from fat\.payment_records where migration_batch_id = \(select id from fat\.migration_batches where batch_key = /)
-  assert.match(sql, /raise exception 'C2_SYNTHETIC_RESULT %'/)
+test('rollback removes migrated payment records (links and audit cascade) before entitlements and claims', () => {
+  const { plan: p } = planCross(synthetic())
+  const r = rollbackSql(p)
+  assert.ok(r.indexOf('delete from fat.payment_records where migration_batch_id = b') < r.indexOf('delete from fat.claim_entitlements where migration_batch_id = b'))
+  assert.ok(r.indexOf('delete from fat.claim_entitlements where migration_batch_id = b') < r.indexOf('delete from fat.operational_claims where migration_batch_id = b'))
+  assert.match(r, /'links_cascaded', n_links, 'audit_cascaded', n_audit/)
 })

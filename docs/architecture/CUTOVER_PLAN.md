@@ -73,6 +73,12 @@ Delivered by WORK-190: contract [`C2_TRANSFORM_CONTRACT.md`](C2_TRANSFORM_CONTRA
 `lib/fat/migration/c2/` + `scripts/c2-transform.mjs`, DEV rehearsal evidence in
 `docs/evidence/WORK-190/`. Evaluates acceptance gates 1–5 and 7; gate 6 stays with C3, 8 with
 C4, 9 with C5. No schema change.
+Re-cut **cross-database** by WORK-255 (tool 2.0.0): source read-only on the legacy Supabase
+project, target the Neon backend (`NEON_BACKEND.md`), owner UUIDs preserved as `legacy_supabase`
+identities, split source/target snapshots, admission (apply / already applied / refuse),
+governed preflight + verify-applied, batch-only rollback, and the `EMPTY_CLAIM_GROUP`
+disposition (WORK-192 blocker B1). **DEV-proven on Neon `dev`** with a synthetic source;
+evidence `docs/evidence/WORK-255/`; contract `C2_TRANSFORM_CONTRACT.md` § 11.
 
 ### C3 — Historical payment-state migration (G09)
 Maps prototype payment state into auditable canonical payment records, allocations and
@@ -128,6 +134,13 @@ canonical entitlement. It is preserved in the migration archive/provenance and l
 parity report as an explicit **excluded legacy artifact**. A future Recall Excess Travel
 entitlement exists only where an authoritative rule establishes it (WORK-173/WORK-174).
 
+## Empty prototype claim groups (`EMPTY_CLAIM_GROUP`, WORK-255)
+
+A prototype `claim_groups` row with no member rows carries no logical event, so it produces
+**no canonical claim**. It is not dropped and not a parity failure: it is recorded as an
+`excluded` source-row ledger entry with its full snapshot and checksum, counted in gate 1 and
+listed in the parity report, and the source row stays untouched (C2 contract § 5, § 11.4).
+
 ## Write-freeze semantics
 
 The freeze begins before C4's source export and ends only at C6. During it, claim and
@@ -163,6 +176,7 @@ window, announcement and mechanism are fixed in the C4 Issue before Production a
 |---|---|---|
 | C1 | [WORK-189](https://linear.app/catalyst-app-development/issue/WORK-189) — C1 Canonical schema/contract readiness (**DEV complete**) | WORK-172 (done) |
 | C2 | [WORK-190](https://linear.app/catalyst-app-development/issue/WORK-190) — C2 Transform-copy tool + DEV rehearsal (owns WORK-173 generator parity) | C1 (done), WORK-173 (done) |
+| C2/C3 cross-DB | [WORK-255](https://linear.app/catalyst-app-development/issue/WORK-255) — Cross-database C2/C3 transform + Neon DEV rehearsal (**DEV-proven**) | WORK-254 (done) |
 | C3 | [WORK-191](https://linear.app/catalyst-app-development/issue/WORK-191) — C3 Historical payment-state migration (**DEV complete**) | C2 (done) |
 | C4 | [WORK-192](https://linear.app/catalyst-app-development/issue/WORK-192) — C4 PROD transform-copy under write freeze | C3, WORK-165/166/167 |
 | C5 | [WORK-193](https://linear.app/catalyst-app-development/issue/WORK-193) — C5 Parity sign-off + canonical cutover | C4 |

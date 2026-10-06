@@ -1,0 +1,26 @@
+-- C2/C3 batch residue (WORK-255) — batch c2:dev:2.0.0:e11f4436c36aede72a7a0374befb31af. Read-only, Neon TARGET.
+select jsonb_build_object(
+  'batch', (select count(*) from fat.migration_batches where batch_key = 'c2:dev:2.0.0:e11f4436c36aede72a7a0374befb31af'),
+  'claims', (select count(*) from fat.operational_claims where id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid)),
+  'details', (select (select count(*) from fat.recall_details where claim_id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid)) + (select count(*) from fat.retain_details where claim_id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid)) + (select count(*) from fat.standby_details where claim_id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid)) + (select count(*) from fat.muster_dismiss_details where claim_id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid)) + (select count(*) from fat.spoilt_meal_details where claim_id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid)) + (select count(*) from fat.delayed_meal_details where claim_id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid))),
+  'entitlements', (select count(*) from fat.claim_entitlements where id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid)),
+  'overrides', (select count(*) from fat.entitlement_overrides where entitlement_id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid)),
+  'payment_records', (select count(*) from fat.payment_records where id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid)),
+  'payment_links', (select count(*) from fat.entitlement_payment_links where entitlement_id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid)),
+  'reconciliation_audit', (select count(*) from fat.reconciliation_audit where entitlement_id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid)),
+  'ledger', (select count(*) from fat.migration_source_rows where id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid)),
+  'data_load', (select count(*) from fat_migrations.data_loads where change_id = 'fat-c2-dev-e11f4436c36aede72a7a0374'),
+  'rollback_record', (select count(*) from fat_migrations.data_loads where change_id = 'fat-c2-dev-e11f4436c36aede72a7a0374-rollback'),
+  'foundation', jsonb_build_object(
+    'identities_kept', (select count(*) from fat.app_identities where id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid)),
+    'financial_years_kept', (select count(*) from fat.financial_years where id in (select (jsonb_array_elements_text($c2ids_4f53cda18c2b$[]$c2ids_4f53cda18c2b$::jsonb))::uuid)),
+    'schema_migrations', (select count(*) from fat_migrations.schema_migrations),
+    'stations', (select count(*) from fat.stations), 'rates', (select count(*) from fat.rates), 'rate_versions', (select count(*) from fat.rate_versions),
+    'other_batches', (select coalesce(jsonb_agg(batch_key order by batch_key), '[]'::jsonb) from fat.migration_batches)),
+  'native', (select jsonb_build_object(
+    'claims', (select count(*) from fat.operational_claims c where c.prototype_row_id is null and c.migration_batch_id is null),
+    'entitlements', (select count(*) from fat.claim_entitlements e join fat.operational_claims c on c.id = e.claim_id where c.prototype_row_id is null and c.migration_batch_id is null),
+    'fingerprint', md5(coalesce((select string_agg((to_jsonb(c) || jsonb_build_object('created_at', extract(epoch from c.created_at), 'updated_at', extract(epoch from c.updated_at), 'generated_at', extract(epoch from c.generated_at)))::text, '|' order by c.id) from fat.operational_claims c where c.prototype_row_id is null and c.migration_batch_id is null), '')
+      || coalesce((select string_agg((to_jsonb(e) || jsonb_build_object('generated_at', extract(epoch from e.generated_at), 'updated_at', extract(epoch from e.updated_at)))::text, '|' order by e.id) from fat.claim_entitlements e join fat.operational_claims c on c.id = e.claim_id where c.prototype_row_id is null and c.migration_batch_id is null), '')
+      || coalesce((select string_agg((to_jsonb(d) || jsonb_build_object('standby_start_at', extract(epoch from d.standby_start_at), 'standby_end_at', extract(epoch from d.standby_end_at)))::text, '|' order by d.claim_id) from fat.standby_details d join fat.operational_claims c on c.id = d.claim_id where c.prototype_row_id is null and c.migration_batch_id is null), '')
+      || coalesce((select string_agg((to_jsonb(d) || jsonb_build_object('md_event_at', extract(epoch from d.md_event_at)))::text, '|' order by d.claim_id) from fat.muster_dismiss_details d join fat.operational_claims c on c.id = d.claim_id where c.prototype_row_id is null and c.migration_batch_id is null), ''))))) as residue;

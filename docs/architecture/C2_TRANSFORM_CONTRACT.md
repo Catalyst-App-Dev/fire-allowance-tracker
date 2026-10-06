@@ -8,6 +8,14 @@
 > model: [`CURRENT_MODEL.md`](CURRENT_MODEL.md) states verified reality and
 > [`PROJECTED_MODEL.md`](PROJECTED_MODEL.md) the approved target.
 
+Re-cut 2026-10-06 by [WORK-255](https://linear.app/catalyst-app-development/issue/WORK-255)
+(tool **2.0.0**): C2/C3 is now **cross-database** — the prototype source is read (read-only) on
+the legacy Supabase project and the canonical target is the Neon backend
+([`NEON_BACKEND.md`](NEON_BACKEND.md)). The single-database `extract-sql` / `harness-sql` path of
+tool 1.x is retired; § 11 is the authoritative description of the 2.0.0 pipeline, snapshot
+contracts, `EMPTY_CLAIM_GROUP`, owner-identity preservation, admission and rollback. Sections
+2, 8, 9 and 10 below describe tool 1.x and are kept as history where § 11 does not override them.
+
 Extended 2026-10-06 by [WORK-191](https://linear.app/catalyst-app-development/issue/WORK-191)
 (tool 1.1.0): the same run now also maps historical payment state (C3) and evaluates gate 6 —
 see [`C3_PAYMENT_STATE_CONTRACT.md`](C3_PAYMENT_STATE_CONTRACT.md). Where this contract says
@@ -125,6 +133,14 @@ canonical JSON of the row) for C4. `source_snapshot` is written only for `exclud
 
 ## 5. Exclusions and intended differences
 
+**Empty claim group** (tool 2.0.0, WORK-255 / WORK-192 B1) — `EMPTY_CLAIM_GROUP`: a prototype
+`claim_groups` row with **zero** member rows in recalls / retain / standby / spoilt_meals. No
+logical event exists, so **no claim** is created; the group is **not dropped and not a failure**:
+it gets one `migration_source_rows` row (`disposition = excluded`, `target_claim_id = NULL`,
+full source snapshot + checksum), is counted in gate 1 (`groups_excluded_empty`) and listed in
+`report.empty_claim_groups`. The source row stays untouched. An empty group whose owner has no
+identity is refused (`owner_missing`), never silently excluded. § 11.4.
+
 **Excluded legacy artifact** — `G12_FAKE_RECALL_EXCESS_TRAVEL`: the known $0 Recall Excess
 Travel auto-child. Disposition `excluded`, full source snapshot preserved, no entitlement,
 listed in `report.exclusions` (refs: CUTOVER_PLAN G12, C1 contract § 4,
@@ -192,8 +208,101 @@ stable for a given snapshot.
 
 ## 10. Security and portability
 
-The tool runs as a privileged operator connection only (the migration tables have no
-`anon`/`authenticated` privileges — re-checked by gate 7). No service-role key reaches the
+The tool runs as a privileged operator connection only. On the Neon target the migration and
+identity tables are closed to `fat_app` (no privilege, `no_api_access` policy) and writable by
+`fat_service`; gate 7 / verify re-check exactly that and that no Supabase API role
+(`anon` / `authenticated` / `service_role`) exists there (tool 2.0.0; tool 1.x checked
+`anon`/`authenticated` on Supabase). No service-role key reaches the
 client. The generated SQL is plain PostgreSQL 14+ (core `sha256()`, `jsonb_populate_recordset`,
 `set_config`/`current_setting`; no extension, no Supabase-only feature), so it is Neon-portable
 (GOV-481).
+
+## 11. Cross-database C2/C3 (tool 2.0.0, WORK-255)
+
+### 11.1 Topology and pipeline
+
+```
+Supabase (legacy, READ-ONLY)                 Neon target (dev; prod only inside C4)
+source-extract-sql ─► source.json ─┐
+                                   ├─► target-extract-sql ─► target.json (reference + state + md5)
+                                   ▼
+            plan --source --target --env --project --target-name --target-id
+              ─► report.json plan.json admission.json apply.sql verify.sql rollback.sql residue.sql plan.sha256
+```
+
+1. `source-extract-sql` — one read-only `select` on Supabase: the five prototype tables in full,
+   `claim_sequences` and `financial_years` of the owners they reference, owner `profiles`
+   (`id`, e-mail), referenced stations and member classifications. Schema
+   `fat.c2.source-snapshot/v2`. Never a write, freeze, grant or schema change.
+2. `target-extract-sql --source S` — one read-only `select` on the Neon target, scoped by the
+   source (owners, e-mails, FYs, stations, source row ids). Schema `fat.c2.target-snapshot/v1`:
+   `reference` (stations, the generator rates/versions with `value` as **text**, native claims of
+   the owners), `reference_md5` = `md5(reference::text)` computed by the database, and `state`
+   (identities, profiles, FYs, claims in scope, ledger rows of the source rows, C2 batches). The
+   row also returns `snapshot_md5`; a copied snapshot is exact iff `md5(copy::jsonb::text)`
+   equals it (numbers travel as text so no JSON transport can alter them).
+3. `plan` — pure and deterministic: **the plan is a function of source + target reference
+   only**; target *state* feeds admission alone. Same inputs → byte-identical plan, report and
+   SQL (proved on Neon: re-plan after apply and after rollback both reproduce sha
+   `799e83aa…`). Gates **R** (target reference readiness) and **I** (identity) join gates 1–7
+   in acceptance. Batch key `c2:<env>:2.0.0:<fingerprint[0:32]>`; change id
+   `fat-c2-<env>-<fingerprint[0:24]>` (the governed data-load key).
+4. `admit --plan P --target T` (also written as `admission.json` at plan time) — `apply` (nothing
+   present), `already_applied` (exactly this batch present and equal) or `refuse` with named
+   conflicts (`source_row_held_by_other_batch`, `claim_held_by_other_batch`, identity / FY
+   conflicts, a different batch definition). A stale or conflicting plan is refused before any
+   write.
+5. `apply.sql` — one `do` block + result `select`, one transaction:
+   **transport guard** (sha256 of the embedded plan literal must equal the reviewed
+   `plan.sha256`, else `C2 refused`) → **stale guard** (the target recomputes its reference md5;
+   any difference → `C2 stale plan`) → **prerequisites** (`fat.ensure_app_identity(id, email,
+   'legacy_supabase')` per owner, source FYs insert-if-absent with equality proof) →
+   `fat_migrations.data_loads` row (`kind migration_batch`, `checksum sha256:<plan sha>`) → batch,
+   claims, details, entitlements, adjustments, C3 payment records/links → ledger → postconditions
+   (gates 1, 3, 4, 7 incl. the `EMPTY_CLAIM_GROUP` postcondition). The batch row stores a summary
+   report with `full_report_sha256` of the full report.
+6. `verify.sql` — read-only (the RLS probe runs as `fat_app` inside a rolled-back
+   sub-transaction). It embeds the source rows' canonical JSON and **does not read any prototype
+   table**: the database rebuilds the canonical text, hashes it and compares it with the plan's
+   `source_checksum` and every ledger row's checksum, then re-derives gates 1–7 and I on the
+   batch, the `fat_app`/`fat_service` security posture and a native-data fingerprint.
+   `check --plan P --verify V` decides pass/fail.
+7. `rollback.sql` — deletes **only** this batch's rows (payment records → links/audit cascade,
+   entitlements → overrides cascade, claims → details and targeted ledger cascade, remaining
+   ledger rows, the batch), removes the batch's data-load row and records
+   `<change id>-rollback`. Owner identities and FYs are foundation and stay. `residue.sql`
+   proves zero batch rows remain, the foundation intact and other batches untouched.
+
+### 11.2 Governed mutation
+
+Every Neon mutation is preceded by `backend-preflight preflight` (operation `data-load` keyed
+by the change id; verify runs `data-write`) bound to app, provider, project, target name and id
+from a fresh branch read, and followed by `verify-applied` against `fat_migrations.data_loads`.
+A refused preflight stops the run. `main` is refused (`dev-not-verified`, `no-rollback`,
+`clearance-required`) until C4.
+
+### 11.3 Owner identity
+
+Owner UUIDs are preserved: each migrated owner becomes a `legacy_supabase` FAT app identity
+whose id **is** the Supabase `auth.users` id (`legacy_subject = id`, no password, no provider
+link) via `fat.ensure_app_identity` (WORK-254 seam). On `dev`, gate I accepts only reserved
+test-domain e-mails (RFC 2606 / 6761); a real address refuses the plan.
+
+### 11.4 `EMPTY_CLAIM_GROUP`
+
+Rule in § 5. Tests cover one, many, mixed (with migrated groups), rerun (verified, not
+re-inserted) and checksum conflict (a changed empty group refuses admission and raises
+`C2 conflict` in the database).
+
+### 11.5 Payment contract
+
+Unchanged from [`C3_PAYMENT_STATE_CONTRACT.md`](C3_PAYMENT_STATE_CONTRACT.md) (WORK-191): the same
+records, links, audit and recompute postconditions run in the cross-database apply; gate 6 is
+re-derived by verify on the target.
+
+### 11.6 Rehearsal evidence
+
+[`docs/evidence/WORK-255/`](../evidence/WORK-255/) — Neon `dev` rehearsal with a synthetic source
+(real Supabase DEV was planned read-only and is empty): apply, identical rerun, verify, conflict
+and stale refusals in the database, admission refusals, rollback, residue, rerun after rollback,
+second verify; Neon `main` empty before and after.

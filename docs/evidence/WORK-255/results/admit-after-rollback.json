@@ -1,0 +1,13 @@
+{
+  "verdict": "apply",
+  "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de",
+  "change_id": "fat-c2-dev-c7dd894ad0445e4a573d746a",
+  "present": {
+    "batch": false,
+    "ledger": 0,
+    "identities": 2,
+    "financial_years": 1,
+    "claims": 0
+  },
+  "conflicts": []
+}

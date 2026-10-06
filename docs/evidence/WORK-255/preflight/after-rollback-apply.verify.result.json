@@ -1,0 +1,20 @@
+{
+  "verdict": "unverified",
+  "binding": {
+    "app": "fire-allowance-tracker",
+    "provider": "neon",
+    "project": "cool-meadow-70196410",
+    "target": "dev",
+    "targetId": "br-wispy-dew-a7vd4v6k",
+    "role": "dev",
+    "backend": "owned",
+    "operation": "data-load",
+    "change": "fat-c2-dev-c7dd894ad0445e4a573d746a"
+  },
+  "reasons": [
+    {
+      "code": "not-applied",
+      "detail": "change \"fat-c2-dev-c7dd894ad0445e4a573d746a\" is not in the target's applied history"
+    }
+  ]
+}

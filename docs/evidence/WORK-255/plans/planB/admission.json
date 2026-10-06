@@ -1,0 +1,99 @@
+{
+  "verdict": "refuse",
+  "batch_key": "c2:dev:2.0.0:8c5f02365973a4d7071e96724cc6b819",
+  "change_id": "fat-c2-dev-8c5f02365973a4d7071e9672",
+  "present": {
+    "batch": false,
+    "ledger": 0,
+    "identities": 2,
+    "financial_years": 1,
+    "claims": 0
+  },
+  "conflicts": [
+    {
+      "code": "source_row_held_by_other_batch",
+      "source": "claim_groups:c2f00000-0000-4000-8000-000000000006",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "source_row_held_by_other_batch",
+      "source": "retain:c2f00000-0000-4000-8000-000000000202",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "source_row_held_by_other_batch",
+      "source": "claim_groups:c2f00000-0000-4000-8000-000000000002",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "source_row_held_by_other_batch",
+      "source": "spoilt_meals:c2f00000-0000-4000-8000-000000000104",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "source_row_held_by_other_batch",
+      "source": "claim_groups:5eed0255-0000-4000-8000-0000000e0003",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "source_row_held_by_other_batch",
+      "source": "retain:c2f00000-0000-4000-8000-000000000201",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "source_row_held_by_other_batch",
+      "source": "recalls:c2f00000-0000-4000-8000-000000000102",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "source_row_held_by_other_batch",
+      "source": "claim_groups:c2f00000-0000-4000-8000-000000000001",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "source_row_held_by_other_batch",
+      "source": "recalls:c2f00000-0000-4000-8000-000000000103",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "source_row_held_by_other_batch",
+      "source": "claim_groups:5eed0255-0000-4000-8000-0000000e0001",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "source_row_held_by_other_batch",
+      "source": "spoilt_meals:c2f00000-0000-4000-8000-000000000601",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "source_row_held_by_other_batch",
+      "source": "claim_groups:5eed0255-0000-4000-8000-0000000e0002",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "source_row_held_by_other_batch",
+      "source": "recalls:c2f00000-0000-4000-8000-000000000101",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "source_row_held_by_other_batch",
+      "source": "spoilt_meals:c2f00000-0000-4000-8000-000000000203",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "claim_held_by_other_batch",
+      "claim_id": "29d9510c-9464-50e2-8cbc-f2ce0179e526",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "claim_held_by_other_batch",
+      "claim_id": "53eeeddb-ff27-5d6e-9946-3817da177cbb",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    },
+    {
+      "code": "claim_held_by_other_batch",
+      "claim_id": "953f7029-2c69-55ea-8ba0-d9c0f07bb556",
+      "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de"
+    }
+  ]
+}

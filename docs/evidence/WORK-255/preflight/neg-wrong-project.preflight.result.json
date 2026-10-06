@@ -1,0 +1,12 @@
+{
+  "decision": "refuse",
+  "role": null,
+  "requiresClearance": false,
+  "binding": null,
+  "reasons": [
+    {
+      "code": "project-mismatch",
+      "detail": "expected project \"cool-meadow-00000000\" is not the app's declared project \"cool-meadow-70196410\""
+    }
+  ]
+}
