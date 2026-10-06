@@ -1,0 +1,21 @@
+{
+  "decision": "refuse",
+  "role": "dev",
+  "requiresClearance": false,
+  "binding": {
+    "app": "fire-allowance-tracker",
+    "provider": "neon",
+    "project": "cool-meadow-70196410",
+    "target": "dev",
+    "targetId": "br-wispy-dew-a7vd4v6k",
+    "role": "dev",
+    "backend": "owned",
+    "operation": "schema-migration"
+  },
+  "reasons": [
+    {
+      "code": "no-change-id",
+      "detail": "schema-migration needs the change id (migration or batch) it applies"
+    }
+  ]
+}

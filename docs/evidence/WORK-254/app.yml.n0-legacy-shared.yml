@@ -1,0 +1,93 @@
+# Catalyst application manifest — Fire Allowance Tracker
+#
+# Machine-readable identity and routing metadata for this application.
+# Every field below is established from evidence inside this repository;
+# fields that could not be established honestly are omitted rather than guessed.
+#
+# Authority: this manifest states WHERE things live (repo, branches, hosting,
+# database, Linear routing). CLAUDE.md states HOW work is done. Where a routing
+# fact appears in both, this manifest is the machine-readable source and
+# CLAUDE.md must agree with it.
+
+schema: catalyst/app@1
+
+id: fire-allowance-tracker
+name: Fire Allowance Tracker
+
+# owner/repo exactly as GitHub renders it — the canonical catalyst/app@1 string
+# shape that the governance locator compares by equality (GOV-327). The repository
+# was transferred to Tinnaz45 under APP-116.
+repository: Tinnaz45/fire-allowance-tracker
+repository_visibility: public
+
+# Normal two-branch application: ordinary work lands on `dev` via PR;
+# `main` is production and is reached only by explicitly approved promotion.
+branches:
+  model: dev-main
+  dev: dev
+  production: main
+
+stack:
+  framework: nextjs
+  package_manager: npm
+
+hosting:
+  provider: vercel
+  production_branch: main
+  preview: pull-request
+
+database:
+  provider: supabase
+  # Established from repository evidence, not assumption:
+  #   - lib/supabaseClient.js            → supabase.schema('fat')
+  #   - app/api/payslip/extract/route.js → db: { schema: 'fat' }
+  #   - supabase/fat-schema.sql          → create schema if not exists fat
+  #   - docs/FAT_SCHEMA_ARCHITECTURE.md  → every FAT-owned object lives in `fat`
+  # The string "fire_allowance_tracker" does not appear anywhere in this
+  # repository as a schema reference. The separate `fire_allowance_tracker`
+  # schema observed in PROD is not read or written by this application; its
+  # disposition is tracked in Linear WORK-144 / WORK-145 (successors to the
+  # deleted GOV-8 / GOV-308 cleanup Issues) and is out of scope here.
+  schema: fat
+  # DEV and PROD are separate Supabase projects — see CLAUDE.md §7.
+  # The `fat` schema must remain exposed to PostgREST.
+
+# Application-owned backend boundary (Governance v2 data.application-backend,
+# schema catalyst/backend@1; WORK-254). N0: FAT still runs on the legacy shared
+# Supabase projects, which stay the one authoritative PROD with writes open.
+# The legacy boundary is FAT's own `fat` schema in each project, including the
+# prototype claim tables (recalls/retain/standby/spoilt_meals/claim_groups/
+# user_rates) that are the C2/C3 migration source.
+backend:
+  schema: catalyst/backend@1
+  state: legacy-shared
+  legacy:
+    provider: supabase
+    projects:
+      dev: kctctvpobbizhkiqkgqw
+      prod: wgcqzamuspuqpedqasbc
+    schema: fat
+    role: authoritative
+    writes: open
+
+# GOV-409 renamed the Applications team (key APP) to Workshop (key WORK).
+# Historical APP-<n> identifiers still resolve to the same Issues.
+linear:
+  team: Workshop
+  team_key: WORK
+  # Applied to every Issue that owns work in this repository.
+  app_label: Fire Allowance Tracker
+
+chatgpt:
+  # Declares this app's ChatGPT Project identity. governance_mode: LIVE was
+  # earned by WORK-110 (formerly APP-110) after the CORE_RULES §20.9.1 migration
+  # checklist passed: the seven shared governance Project Sources are retired as
+  # authority, and every governed dispatch must resolve a current live snapshot.
+  project: Fire Allowance Tracker
+  eligible: true
+  governance_mode: LIVE
+
+instructions:
+  agent: CLAUDE.md
+  rules: .claude/rules.md
+  docs: docs/

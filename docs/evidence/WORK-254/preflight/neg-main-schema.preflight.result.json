@@ -1,0 +1,30 @@
+{
+  "decision": "refuse",
+  "role": "prod",
+  "requiresClearance": true,
+  "binding": {
+    "app": "fire-allowance-tracker",
+    "provider": "neon",
+    "project": "cool-meadow-70196410",
+    "target": "main",
+    "targetId": "br-red-credit-a77927m4",
+    "role": "prod",
+    "backend": "owned",
+    "operation": "schema-migration",
+    "change": "20261006060000"
+  },
+  "reasons": [
+    {
+      "code": "dev-not-verified",
+      "detail": "no verified evidence that change \"20261006060000\" is applied on the dev target first; DEV precedes PROD"
+    },
+    {
+      "code": "no-rollback",
+      "detail": "a PROD schema-migration needs a named rollback or restore path { kind, ref }"
+    },
+    {
+      "code": "clearance-required",
+      "detail": "PROD schema-migration needs explicit Production clearance for exactly this operation; capability is not authorization"
+    }
+  ]
+}
