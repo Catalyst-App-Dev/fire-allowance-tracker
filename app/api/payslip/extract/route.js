@@ -25,6 +25,8 @@ import { runScreenshotExtraction, ExtractionStateError, resolveExtractionAdapter
 import { SCREENSHOT_BUCKET } from '@/lib/fat/services/payslipUploads'
 import { hasFeature } from '@/lib/features'
 
+import { isNeonBackend } from '@/lib/backend'
+
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
@@ -93,6 +95,9 @@ function statusForCode(code) {
 }
 
 export async function POST(req) {
+  // Neon backend (WORK-256): Payments + payslip storage are dark (WORK-257).
+  // No Supabase Storage / Auth fallback for Neon users — fail closed.
+  if (isNeonBackend()) return new Response(JSON.stringify({ ok: false, code: 'not_found' }), { status: 404, headers: { 'content-type': 'application/json' } })
   const auth = await authenticate(req)
   if (!auth.ok) return jsonError(auth.status, auth.code, 'Not authenticated.')
 
@@ -168,6 +173,7 @@ export async function POST(req) {
 // without the Payments feature, is reported `available: false` with no hint the
 // feature exists. Reveals only a boolean — never a secret or user data.
 export async function GET(req) {
+  if (isNeonBackend()) return new Response(JSON.stringify({ ok: false, code: 'not_found' }), { status: 404, headers: { 'content-type': 'application/json' } })
   const auth = await authenticate(req)
   if (!auth.ok) return NextResponse.json({ ok: true, available: false }, { status: 200 })
 

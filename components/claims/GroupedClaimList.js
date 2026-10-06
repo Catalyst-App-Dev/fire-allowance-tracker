@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState } from 'react'
+import { isCanonicalRow, isHoursRow, formatHours } from '@/lib/claims/canonical/display'
 import { useClaims } from '@/lib/claims/ClaimsContext'
 import { CLAIM_TYPE_LABELS } from '@/lib/claims/claimTypes'
 import {
@@ -43,6 +44,7 @@ function claimHeaderTitle(claim) {
 }
 
 function resolveChildLabel(claim) {
+  if (claim.canonical?.label) return claim.canonical.label
   const ai = claim.calculation_inputs || {}
   if (ai.autoChild === 'callback_ops')             return 'Callback-Ops'
   if (ai.autoChild === 'excess_travel')             return 'Excess Travel'
@@ -137,8 +139,9 @@ function QuickPayToggle({ claim, session, activeFY }) {
 
   const isPaid = (claim.payment_status || '').toLowerCase() === 'paid'
 
-  // Only visible for unpaid subclaims
-  if (isPaid) return null
+  // Only visible for unpaid subclaims; never on canonical (Neon) rows, whose
+  // payment state is read-only (canonical payment records; Payments dark).
+  if (isPaid || isCanonicalRow(claim)) return null
 
   // Payslip-method rows require a Pay Number at mark-as-paid time.
   const needsPayNumber =
@@ -214,17 +217,21 @@ function ChildClaimRow({ claim, session, activeFY, isLast }) {
         </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-        <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#f9fafb', fontVariantNumeric: 'tabular-nums' }}>${amt.toFixed(2)}</span>
+        <span style={{ fontSize: '0.88rem', fontWeight: 700, color: '#f9fafb', fontVariantNumeric: 'tabular-nums' }}>{isHoursRow(claim) ? formatHours(claim.canonical.hours) : `$${amt.toFixed(2)}`}</span>
+        {isHoursRow(claim) && claim.canonical.estimate != null && (
+          <span title="Estimate only — hours are the entitlement" style={{ fontSize: '0.66rem', color: '#6b7280' }}>≈ ${Number(claim.canonical.estimate).toFixed(2)} est.</span>
+        )}
         {/* CANONICAL: PaymentStatusBadge from payment_status. Normalize NULL → Pending. */}
         <PaymentStatusBadge paymentStatus={claim.payment_status || 'Pending'} />
         <QuickPayToggle claim={claim} session={session} activeFY={activeFY} />
-        {/* LEGACY compat: clickable status badge for old rows — secondary display only */}
-        <button onClick={cycleStatus} disabled={updating} title="Legacy status (secondary)" style={{ background: 'none', border: 'none', padding: 0, cursor: updating ? 'wait' : 'pointer', opacity: updating ? 0.5 : 1 }}>
+        {/* LEGACY compat: clickable status badge for old rows — secondary display only
+            (never on canonical rows: payment state is read-only there) */}
+        {!isCanonicalRow(claim) && <button onClick={cycleStatus} disabled={updating} title="Legacy status (secondary)" style={{ background: 'none', border: 'none', padding: 0, cursor: updating ? 'wait' : 'pointer', opacity: updating ? 0.5 : 1 }}>
           <StatusBadge status={status} />
-        </button>
-        <button onClick={() => setShowDelete(true)} title="Delete this sub-claim" aria-label="Delete sub-claim" style={{ padding: '3px 7px', borderRadius: '6px', border: '1px solid rgba(239,68,68,0.35)', background: 'rgba(239,68,68,0.08)', color: '#f87171', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0, lineHeight: 1 }}>
+        </button>}
+        {!isCanonicalRow(claim) && <button onClick={() => setShowDelete(true)} title="Delete this sub-claim" aria-label="Delete sub-claim" style={{ padding: '3px 7px', borderRadius: '6px', border: '1px solid rgba(239,68,68,0.35)', background: 'rgba(239,68,68,0.08)', color: '#f87171', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', flexShrink: 0, lineHeight: 1 }}>
           🗑
-        </button>
+        </button>}
       </div>
       {showDelete && (
         <DeleteConfirmModal

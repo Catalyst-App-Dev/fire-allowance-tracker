@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabaseClient'
+import { requestPasswordReset } from '@/lib/auth/session'
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
@@ -20,10 +20,7 @@ export default function ForgotPasswordPage() {
 
     try {
       const redirectUrl = `${window.location.origin}/reset-password`
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: redirectUrl,
-      })
-      if (error) throw error
+      await requestPasswordReset(email, redirectUrl)
       setMessage('Check your email for the reset link.')
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.')

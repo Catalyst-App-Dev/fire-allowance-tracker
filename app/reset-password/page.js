@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { isNeonBackend } from '@/lib/backend'
+import { completePasswordReset } from '@/lib/auth/session'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -12,10 +14,22 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [sessionReady, setSessionReady] = useState(false)
+  const [resetToken, setResetToken] = useState(null)
 
   // Supabase sends reset tokens in the URL hash — extract and set session
   useEffect(() => {
     const handleSession = async () => {
+      // Neon Auth: the reset link carries ?token=… (no session is set here).
+      if (isNeonBackend()) {
+        const token = new URLSearchParams(window.location.search).get('token')
+        if (!token) {
+          setError('This reset link is invalid or has expired. Please request a new one.')
+          return
+        }
+        setResetToken(token)
+        setSessionReady(true)
+        return
+      }
       const hash = window.location.hash
       if (hash) {
         const params = new URLSearchParams(hash.substring(1))
@@ -50,8 +64,7 @@ export default function ResetPasswordPage() {
 
     setLoading(true)
     try {
-      const { error } = await supabase.auth.updateUser({ password })
-      if (error) throw error
+      await completePasswordReset({ password, token: resetToken })
       setMessage('Password updated! Redirecting to sign in…')
       setTimeout(() => router.push('/login'), 2000)
     } catch (err) {

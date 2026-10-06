@@ -1,0 +1,19 @@
+{
+ "app": "fire-allowance-tracker",
+ "expected": {
+  "app": "fire-allowance-tracker",
+  "provider": "neon",
+  "project": "cool-meadow-70196410",
+  "target": "dev"
+ },
+ "observed": {
+  "adapter": "neon",
+  "raw": {
+   "id": "br-not-the-dev-target",
+   "project_id": "cool-meadow-70196410",
+   "name": "dev"
+  }
+ },
+ "operation": "schema-migration",
+ "change": "20261006090000"
+}

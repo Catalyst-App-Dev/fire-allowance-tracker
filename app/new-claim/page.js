@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
+import { getCurrentSession } from '@/lib/auth/session'
 import ClaimForm from '@/components/claims/ClaimForm'
 import AppShell from '@/components/nav/AppShell'
 
@@ -13,10 +13,10 @@ export default function NewClaimPage() {
   const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
+    getCurrentSession().catch(() => null).then((current) => {
+      setSession(current)
       setLoading(false)
-      if (!data.session) router.replace('/login')
+      if (!current) router.replace('/login')
     })
   }, [router])
 

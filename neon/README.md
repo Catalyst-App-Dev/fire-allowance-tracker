@@ -12,6 +12,12 @@ The target is declared in [`.catalyst/app.yml`](../.catalyst/app.yml) `backend:`
 | `verify/fat_neon_verify.sql` | 62 behavioural checks, each in an always-rolled-back sub-transaction |
 | `verify/fat_catalog_fingerprint.sql` | Read-only catalog fingerprint; runs unchanged on Neon and Supabase |
 
+Application runtime on Neon (WORK-256): [`docs/architecture/NEON_APP_RUNTIME.md`](../docs/architecture/NEON_APP_RUNTIME.md).
+Migration `20261006090000_fat_neon_app_server_roles` creates the two server login roles
+(`fat_app_server`, `fat_identity_provisioner`). It sets **no password**: the operator sets each one in the
+Neon console (`ALTER ROLE … PASSWORD`) on `dev`, and the resulting connection strings live only in Vercel
+environment variables.
+
 ## Applying a migration (governed)
 
 Merging is not applying. Each apply is a separate, deliberate act on one declared target:

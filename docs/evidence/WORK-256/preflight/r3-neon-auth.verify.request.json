@@ -1,0 +1,41 @@
+{
+ "target": {
+  "app": "fire-allowance-tracker",
+  "provider": "neon",
+  "project": "cool-meadow-70196410",
+  "target": "dev",
+  "targetId": "br-wispy-dew-a7vd4v6k",
+  "role": "dev",
+  "backend": "owned",
+  "operation": "auth-config",
+  "change": "fat-dev-neon-auth-20261006"
+ },
+ "change": "fat-dev-neon-auth-20261006",
+ "observed": {
+  "adapter": "neon",
+  "raw": {
+   "id": "br-wispy-dew-a7vd4v6k",
+   "project_id": "cool-meadow-70196410",
+   "name": "dev",
+   "parent_id": "br-red-credit-a77927m4"
+  }
+ },
+ "applied": [
+  "fat-dev-neon-auth-20261006"
+ ],
+ "readAt": "2026-10-06T09:45:40Z",
+ "evidence": {
+  "source": "get_neon_auth_config(cool-meadow-70196410, br-wispy-dew-a7vd4v6k)",
+  "integration": {
+   "auth_provider": "better_auth",
+   "branch_id": "br-wispy-dew-a7vd4v6k",
+   "db_name": "neondb",
+   "created_at": "2026-10-06T09:45:21Z"
+  },
+  "email_password": {
+   "enabled": true,
+   "require_email_verification": false
+  },
+  "main_branch_get_auth": "HTTP 404 Neon Auth is not enabled for this branch"
+ }
+}

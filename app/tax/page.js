@@ -17,11 +17,13 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
+import { getCurrentSession } from '@/lib/auth/session'
 import { useClaims } from '@/lib/claims/ClaimsContext'
 import { useRates } from '@/lib/calculations/RatesContext'
 import { useFY } from '@/lib/fy/FinancialYearContext'
 import { calcTaxSummary, roundMoney, formatFYLabel } from '@/lib/calculations/engine'
+import { calcCanonicalTaxSummary } from '@/lib/claims/canonical/tax'
+import { isNeonBackend } from '@/lib/backend'
 import AppShell from '@/components/nav/AppShell'
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
@@ -139,11 +141,11 @@ export default function TaxPage() {
   // ── Auth ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) { router.replace('/login'); return }
-      setSession(data.session)
+    getCurrentSession().catch(() => null).then((current) => {
+      if (!current) { router.replace('/login'); return }
+      setSession(current)
       setAuthLoading(false)
-      const uid = data.session.user.id
+      const uid = current.user.id
       loadFYs(uid)
       loadRates(uid)
       loadClaims(uid)
@@ -165,7 +167,10 @@ export default function TaxPage() {
 
   // ── Compute summary ───────────────────────────────────────────────────────
 
-  const summary          = calcTaxSummary(fyClaims, rates)
+  // Neon backend (WORK-256): figures come from the canonical entitlements.
+  const summary          = isNeonBackend() ? calcCanonicalTaxSummary(fyClaims) : calcTaxSummary(fyClaims, rates)
+  const smallMealRate    = summary.canonical ? summary.smallMealRate : rates.smallMealAllowance
+  const largeMealRate    = summary.canonical ? summary.largeMealRate : rates.largeMealAllowance
   const totalMealDollars = roundMoney(summary.smallMealTotal + summary.largeMealTotal)
   const grandTotal       = summary.grandTotal.toFixed(2)
 
@@ -175,8 +180,8 @@ export default function TaxPage() {
     const lines = [
       `Tax Summary — ${activeFY ? formatFYLabel(activeFY.label) : 'All Years'}`,
       '',
-      `Small Meals: ${summary.smallMealCount} × $${rates.smallMealAllowance.toFixed(2)} = $${summary.smallMealTotal.toFixed(2)}`,
-      `Large Meals: ${summary.largeMealCount} × $${rates.largeMealAllowance.toFixed(2)} = $${summary.largeMealTotal.toFixed(2)}`,
+      `Small Meals: ${summary.smallMealCount} × $${smallMealRate.toFixed(2)} = $${summary.smallMealTotal.toFixed(2)}`,
+      `Large Meals: ${summary.largeMealCount} × $${largeMealRate.toFixed(2)} = $${summary.largeMealTotal.toFixed(2)}`,
       `Total Meals: ${summary.totalMeals} = $${totalMealDollars.toFixed(2)}`,
       '',
       `Travel: ${summary.travelKm} km × $${summary.travelRate.toFixed(2)}/km = $${summary.travelTotal.toFixed(2)}`,
@@ -252,12 +257,12 @@ export default function TaxPage() {
 
               <TaxRow
                 label="Small Meals"
-                sub={`${summary.smallMealCount} × $${rates.smallMealAllowance.toFixed(2)}`}
+                sub={`${summary.smallMealCount} × $${smallMealRate.toFixed(2)}`}
                 value={`$${summary.smallMealTotal.toFixed(2)}`}
               />
               <TaxRow
                 label="Large Meals"
-                sub={`${summary.largeMealCount} × $${rates.largeMealAllowance.toFixed(2)}`}
+                sub={`${summary.largeMealCount} × $${largeMealRate.toFixed(2)}`}
                 value={`$${summary.largeMealTotal.toFixed(2)}`}
               />
 
@@ -267,7 +272,9 @@ export default function TaxPage() {
               </div>
 
               <div style={{ marginTop: '8px', fontSize: '0.74rem', color: '#6b7280' }}>
-                Double meal claims counted as 1 small + 1 large. Spoilt Meal and Delayed Meal claims counted as 1 small.
+                {summary.canonical
+                  ? 'Each generated meal allowance counted once at its actual amount: Small Meal Allowance as small; recall, retain, spoilt and delayed meal allowances as large. Overrides apply.'
+                  : 'Double meal claims counted as 1 small + 1 large. Spoilt Meal and Delayed Meal claims counted as 1 small.'}
               </div>
             </div>
 

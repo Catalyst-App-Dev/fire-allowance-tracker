@@ -4,6 +4,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase, fat } from '@/lib/supabaseClient'
+import { isNeonBackend } from '@/lib/backend'
+import { callFat } from '@/lib/data/fatApi'
+import { getCurrentSession } from '@/lib/auth/session'
+import { loadProfileBundle, saveProfile } from '@/lib/profile/profileRepository'
 import AppShell from '@/components/nav/AppShell'
 import {
   markAllDistancesStale,
@@ -65,9 +69,9 @@ export default function ProfilePage() {
   const [errorMsg, setErrorMsg] = useState(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) { router.replace('/login'); return }
-      setSession(data.session)
+    getCurrentSession().then((sess) => {
+      if (!sess) { router.replace('/login'); return }
+      setSession(sess)
       setAuthLoading(false)
     })
   }, [router])
@@ -82,25 +86,15 @@ export default function ProfilePage() {
         // and is intentionally NOT read into state. This removes the
         // bare/composed dual-shape that caused the "FS42 - FS42 - Newport"
         // hydration bug; the in-memory shape is now strictly (station_id, bare name).
-        const [profileResult, extResult, stationsResult, homeRec] = await Promise.all([
-          fat.from('profiles')
-             .select('first_name, last_name')
-             .eq('id', session.user.id)
-             .maybeSingle(),
-          fat.from('profile_ext')
-             .select('home_address, platoon, pay_number, station_id, home_dist_km')
-             .eq('user_id', session.user.id)
-             .maybeSingle(),
-          fat.from('stations')
-             .select('id, name, abbreviation, street_address, suburb, postcode, lat, lng')
-             .eq('is_active', true)
-             .order('id', { ascending: true }),
+        // lib/profile/profileRepository.js — server-side on Neon (WORK-256).
+        const [bundle, homeRec] = await Promise.all([
+          isNeonBackend() ? callFat('profile.load') : loadProfileBundle(fat, session.user.id),
           getHomeAddress(session.user.id),
         ])
 
-        const profile = profileResult.data
-        const ext     = extResult.data
-        const stns    = stationsResult.data || []
+        const profile = bundle.profile
+        const ext     = bundle.ext
+        const stns    = bundle.stations || []
 
         setStations(stns)
 
@@ -172,31 +166,14 @@ export default function ProfilePage() {
       // fat.profiles is FAT-owned authoritative identity (mirrors mica.profiles).
       // email is NOT NULL and sourced from auth.users; include it on every
       // upsert so the INSERT side of ON CONFLICT stays auth-consistent.
-      const { error: profileError } = await fat.from('profiles').upsert({
-        id: session.user.id,
-        email: session.user.email,
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        // Canonical rostered station. The entitlement engine
-        // (lib/fat/engine/context.js § buildEngineContext) reads
-        // fat.profiles.rostered_station_id to resolve the excess-travel "from"
-        // station; without it, excess-travel generation is suppressed. Kept in
-        // lockstep with the prototype profile_ext.station_id written below so
-        // both paths agree. Affects future claims only — historical claims keep
-        // their own station_id_snapshot.
-        rostered_station_id: stationId ? parseInt(stationId) : null,
-      }, { onConflict: 'id' })
-      if (profileError) throw profileError
-
-      const { error: extError } = await fat.from('profile_ext').upsert({
-        user_id:                session.user.id,
-        home_address:           homeAddress.trim(),
-        platoon:                platoon || null,
-        station_id:             stationId ? parseInt(stationId) : null,
-        rostered_station_label: stationLabel,
-        pay_number:             payNumber.trim() || null,
-      }, { onConflict: 'user_id' })
-      if (extError) throw extError
+      // fat.profiles + fat.profile_ext (lib/profile/profileRepository.js). On
+      // Neon the server supplies the identity and its e-mail (WORK-256).
+      const profileInput = {
+        firstName, lastName, stationId, stationLabel,
+        homeAddress, platoon, payNumber,
+      }
+      if (isNeonBackend()) await callFat('profile.save', profileInput)
+      else await saveProfile(fat, session.user.id, { ...profileInput, email: session.user.email })
 
       // If the user picked a verified suggestion AND that selection still
       // matches the text in the input, pre-populate fat.home_address with the

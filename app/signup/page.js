@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabaseClient'
+import { signUpWithPassword } from '@/lib/auth/session'
 
 export default function SignupPage() {
   const router = useRouter()
@@ -29,23 +29,26 @@ export default function SignupPage() {
     }
 
     setLoading(true)
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        redirectTo: window.location.origin,
-      },
-    })
-
-    if (error) {
+    let result
+    try {
+      result = await signUpWithPassword(email, password)
+    } catch (error) {
       setError(error.message)
       setLoading(false)
       return
     }
 
-    setSuccess('Account created! Check your email to confirm your account, then sign in.')
-    setLoading(false)
-    setTimeout(() => router.push('/login'), 3000)
+    // Supabase: confirm by e-mail, then sign in. Neon Auth (DEV): signed in on
+    // sign-up (e-mail verification is not required for synthetic users).
+    if (result?.needsConfirmation) {
+      setSuccess('Account created! Check your email to confirm your account, then sign in.')
+      setLoading(false)
+      setTimeout(() => router.push('/login'), 3000)
+    } else {
+      setSuccess('Account created! Signing you in…')
+      setLoading(false)
+      setTimeout(() => router.push('/'), 800)
+    }
   }
 
   return (

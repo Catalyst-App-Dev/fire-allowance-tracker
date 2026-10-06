@@ -34,6 +34,7 @@
 
 import { NextResponse } from 'next/server'
 import { createClient }  from '@supabase/supabase-js'
+import { isNeonBackend } from '@/lib/backend'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -204,6 +205,19 @@ async function routeViaOsrm({ from, to }) {
 // ── Auth + Rate limit ──────────────────────────────────────────────────────
 
 async function authenticate(req) {
+  // Neon backend (WORK-256): verify the Neon Auth session cookie server-side
+  // and key the rate limit on the resolved FAT app identity. No Supabase call.
+  if (isNeonBackend()) {
+    const { getSessionUser } = await import('@/lib/server/auth')
+    const { resolveAppIdentity } = await import('@/lib/server/identity')
+    const user = await getSessionUser().catch(() => null)
+    if (!user) return { ok: false, status: 401, code: 'invalid_token' }
+    try {
+      return { ok: true, userId: await resolveAppIdentity(user) }
+    } catch {
+      return { ok: false, status: 403, code: 'identity_refused' }
+    }
+  }
   const authHeader = req.headers.get('authorization') || req.headers.get('Authorization')
   if (!authHeader || !authHeader.toLowerCase().startsWith('bearer ')) {
     return { ok: false, status: 401, code: 'missing_token' }

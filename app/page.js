@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabaseClient'
+import { getCurrentSession, onAuthStateChange, signOut } from '@/lib/auth/session'
 import { useClaims } from '@/lib/claims/ClaimsContext'
 import { useRates } from '@/lib/calculations/RatesContext'
 import { useFY } from '@/lib/fy/FinancialYearContext'
@@ -45,7 +45,89 @@ const LABEL_STYLE = {
 
 // ─── Edit Claim Modal ─────────────────────────────────────────────────────────
 
-function EditClaimModal({ claim, session, activeFY, onClose, onSuccess }) {
+function EditClaimModal(props) {
+  // Neon backend (WORK-256): canonical rows are edited as audited entitlement
+  // overrides; the prototype edit form applies to Supabase rows only.
+  return props.claim?.canonical ? <CanonicalEditModal {...props} /> : <PrototypeEditClaimModal {...props} />
+}
+
+// ─── Canonical entitlement override (Neon backend, WORK-256) ─────────────────
+// Edits ONE generated entitlement: its dollar amount (allowances) or its hours
+// (hours-first time entitlements), with a mandatory reason. The generated value
+// stays untouched; the database audit trigger records the override in
+// fat.entitlement_overrides. Date / shift / platoon are fixed at generation.
+
+function CanonicalEditModal({ claim, session, activeFY, onClose, onSuccess }) {
+  const { updateClaim } = useClaims()
+  const c = claim.canonical
+  const isHours = c.unit === 'hours'
+  const current = isHours ? (c.editedHours ?? c.generatedHours) : (c.editedAmount ?? c.generatedAmount)
+  const [value, setValue] = useState(current != null ? String(current) : '')
+  const [reason, setReason] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState(null)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError(null)
+    if (value === '' || isNaN(Number(value)) || Number(value) < 0) {
+      setError(isHours ? 'Please enter valid hours.' : 'Please enter a valid amount.'); return
+    }
+    if (!reason.trim()) { setError('Please give a reason for this change.'); return }
+    setSubmitting(true)
+    try {
+      await updateClaim({
+        userId: session.user.id,
+        claim,
+        amount: Number(value),
+        reason: reason.trim(),
+        financialYearId: activeFY?.id || null,
+      })
+      onSuccess()
+    } catch (err) {
+      console.error('[EditClaim] Override error:', err)
+      setError(err.message || 'Failed to update the entitlement. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <ModalBackdrop onClose={onClose}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#f9fafb' }}>Edit Entitlement</h2>
+          <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#6b7280' }}>
+            {c.label} · {CLAIM_TYPE_LABELS[claim.claimType] || claim.claimType} · {claim.date}
+          </p>
+        </div>
+        <ModalCloseBtn onClose={onClose} />
+      </div>
+
+      <form onSubmit={handleSubmit} noValidate>
+        <p style={{ fontSize: '0.76rem', color: '#9ca3af', margin: '0 0 14px' }}>
+          Generated {isHours ? `${Number(c.generatedHours).toFixed(2)} h` : `$${Number(c.generatedAmount).toFixed(2)}`}
+          {c.formulaExplanation ? ` — ${c.formulaExplanation}` : ''}. Date, shift and platoon are fixed when a claim
+          is created; delete and re-create the claim to change them.
+        </p>
+        <div style={{ marginBottom: '16px' }}>
+          <label style={LABEL_STYLE}>{isHours ? 'Hours' : 'Amount ($)'}</label>
+          <input type="number" min="0" step={isHours ? '0.25' : '0.01'} value={value}
+            onChange={(e) => setValue(e.target.value)} style={INPUT_STYLE} />
+        </div>
+        <div style={{ marginBottom: '24px' }}>
+          <label style={LABEL_STYLE}>Reason (recorded in the audit log)</label>
+          <input type="text" maxLength={500} value={reason} onChange={(e) => setReason(e.target.value)}
+            placeholder="e.g. Corrected to match the payslip" style={INPUT_STYLE} />
+        </div>
+        {error && <ErrorBox message={error} />}
+        <ModalActions onCancel={onClose} submitting={submitting} submitLabel="Save Override" />
+      </form>
+    </ModalBackdrop>
+  )
+}
+
+function PrototypeEditClaimModal({ claim, session, activeFY, onClose, onSuccess }) {
   const { updateClaim } = useClaims()
   const [date, setDate] = useState(claim.date || '')
   const [amount, setAmount] = useState(
@@ -463,18 +545,18 @@ export default function HomePage() {
 
   useEffect(() => {
     const getSession = async () => {
-      const { data } = await supabase.auth.getSession()
-      setSession(data.session)
+      const current = await getCurrentSession().catch(() => null)
+      setSession(current)
       setLoading(false)
       setSessionResolved(true)
     }
     getSession()
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, sess) => {
+    const unsubscribe = onAuthStateChange((sess) => {
       setSession(sess)
       setSessionResolved(true)
     })
-    return () => { listener.subscription.unsubscribe() }
+    return unsubscribe
   }, [])
 
   useEffect(() => {
@@ -608,7 +690,7 @@ export default function HomePage() {
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
               <FYSelector />
               <button
-                onClick={async () => { await supabase.auth.signOut(); window.location.assign('/login') }}
+                onClick={async () => { await signOut(); window.location.assign('/login') }}
                 style={{
                   padding: '8px 16px', background: '#dc2626', color: 'white',
                   border: 'none', borderRadius: '8px', cursor: 'pointer',
