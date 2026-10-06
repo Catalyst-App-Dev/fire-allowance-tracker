@@ -14,6 +14,7 @@ verified after it was applied.
 | `r1-roles` | `schema-migration` `20261006090000_fat_neon_app_server_roles` | allow | verified |
 | `r2-role-credentials` | `auth-config` `fat-dev-app-server-credentials-20261006` (role passwords; functional login proof) | allow | verified |
 | `r3-neon-auth` | `auth-config` `fat-dev-neon-auth-20261006` (Neon Auth on `dev`) | allow | verified |
+| `r4-preview-trusted-domain` | `auth-config` `fat-dev-neon-auth-preview-origin-20261006` (Neon Auth `dev` trusts the PR #48 Preview branch alias; the adapter forwards the browser Origin) | allow | verified |
 
 Negative checks:
 

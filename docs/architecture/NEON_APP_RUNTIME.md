@@ -139,6 +139,11 @@ cutover preparation, the routing switch, every Production action, and:
 - Production Neon Auth provisioning, trusted domains, real-member identity linking by verified
   e-mail, and the member password-reset communication.
 - Lifting the DEV synthetic-only identity rule for Production (a deliberate, reviewed change).
+- Vercel function region. The project currently runs functions in `iad1`, while Neon is in
+  `aws-ap-southeast-2`; each member request opens a transaction across the Pacific. Pin functions
+  to `syd1` before Production.
+- Neon Auth trusted domains for the Production origin. DEV trusts only the WORK-256 Preview
+  branch alias, plus localhost through the provider's localhost setting.
 
 ## 8. Environment variables (server-only unless noted)
 
