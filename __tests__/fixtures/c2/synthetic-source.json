@@ -1,5 +1,5 @@
 {
- "description": "C2 synthetic prototype source (WORK-190): representative events for all six claim types. Placeholders {{OWNER}} {{FY2026}} {{STN_A}} {{STN_B}} are bound at rehearsal time. evidence_class = synthetic; never persisted.",
+ "description": "C2 synthetic prototype source (WORK-190): representative events for all six claim types, with prototype payment states for C3 (WORK-191): paid / unpaid / adjusted / hours-first / mixed claims / a paid container parent. Placeholders {{OWNER}} {{FY2026}} {{STN_A}} {{STN_B}} are bound at rehearsal time. evidence_class = synthetic; never persisted.",
  "source": {
   "claim_groups": [
    {
@@ -107,6 +107,8 @@
     "id": "c2f00000-0000-4000-8000-000000000101",
     "mealie_amount": 31.45,
     "notes": "Pump relief",
+    "payment_date": "2026-02-10T03:00:00Z",
+    "payment_status": "Paid",
     "rates_snapshot": {
      "kilometreRate": 1.5,
      "kmRate": 1.5,
@@ -116,6 +118,7 @@
     "recall_stn_id": "{{STN_B}}",
     "rostered_stn_id": "{{STN_A}}",
     "shift": "Day",
+    "status": "Pending",
     "total_amount": 106.45,
     "travel_amount": 75,
     "user_id": "{{OWNER}}"
@@ -136,6 +139,10 @@
     "financial_year_id": "{{FY2026}}",
     "id": "c2f00000-0000-4000-8000-000000000102",
     "mealie_amount": 0,
+    "payment_date": "2026-02-12T13:30:00Z",
+    "payment_status": "Paid",
+    "payslip_pay_nbr": "PN-0042",
+    "status": "Pending",
     "total_amount": 75,
     "travel_amount": 75,
     "user_id": "{{OWNER}}"
@@ -155,6 +162,9 @@
     "financial_year_id": "{{FY2026}}",
     "id": "c2f00000-0000-4000-8000-000000000103",
     "mealie_amount": 0,
+    "payment_date": null,
+    "payment_status": null,
+    "status": "Pending",
     "total_amount": 0,
     "travel_amount": 0,
     "user_id": "{{OWNER}}"
@@ -184,6 +194,8 @@
     "generated_hours": 4.25,
     "id": "c2f00000-0000-4000-8000-000000000201",
     "overnight_cash": 0,
+    "payment_date": null,
+    "payment_status": null,
     "rates_snapshot": {
      "kilometreRate": 1.5,
      "kmRate": 1.5,
@@ -194,6 +206,7 @@
     "retain_rate_used": 101.02,
     "shift": "Day",
     "station_id": "{{STN_A}}",
+    "status": "Pending",
     "total_amount": 471.7,
     "user_id": "{{OWNER}}"
    },
@@ -215,9 +228,12 @@
     "generated_hours": 4.25,
     "id": "c2f00000-0000-4000-8000-000000000202",
     "overnight_cash": 0,
+    "payment_date": "2026-03-05T01:00:00Z",
+    "payment_status": "Paid",
     "retain_amount": 429.35,
     "retain_rate_used": 101.02,
     "shift": "Day",
+    "status": "Pending",
     "total_amount": 429.35,
     "user_id": "{{OWNER}}"
    },
@@ -240,6 +256,8 @@
     "generated_hours": 4.0,
     "id": "c2f00000-0000-4000-8000-000000000301",
     "overnight_cash": 0,
+    "payment_date": null,
+    "payment_status": null,
     "rates_snapshot": {
      "kilometreRate": 1.5,
      "kmRate": 1.5,
@@ -250,6 +268,7 @@
     "retain_rate_used": 101.02,
     "shift": "Day",
     "station_id": "{{STN_A}}",
+    "status": "Pending",
     "total_amount": 424.63,
     "user_id": "{{OWNER}}"
    },
@@ -268,8 +287,11 @@
     "generated_hours": 4.0,
     "id": "c2f00000-0000-4000-8000-000000000302",
     "overnight_cash": 0,
+    "payment_date": null,
+    "payment_status": "Pending",
     "retain_amount": 404.08,
     "shift": "Day",
+    "status": "Pending",
     "total_amount": 404.08,
     "user_id": "{{OWNER}}"
    }
@@ -292,7 +314,10 @@
     "id": "c2f00000-0000-4000-8000-000000000104",
     "meal_amount": 31.45,
     "meal_type": "Double",
+    "payment_date": null,
+    "payment_status": null,
     "shift": "Day",
+    "status": "Pending",
     "total_amount": 31.45,
     "user_id": "{{OWNER}}"
    },
@@ -312,7 +337,10 @@
     "id": "c2f00000-0000-4000-8000-000000000203",
     "meal_amount": 42.35,
     "meal_type": "Double",
+    "payment_date": "2026-03-05T01:00:00Z",
+    "payment_status": "Paid",
     "shift": "Day",
+    "status": "Pending",
     "total_amount": 42.35,
     "user_id": "{{OWNER}}"
    },
@@ -332,7 +360,10 @@
     "id": "c2f00000-0000-4000-8000-000000000303",
     "meal_amount": 20.55,
     "meal_type": "Large",
+    "payment_date": null,
+    "payment_status": null,
     "shift": "Day",
+    "status": "Pending",
     "total_amount": 20.55,
     "user_id": "{{OWNER}}"
    },
@@ -349,7 +380,10 @@
     "id": "c2f00000-0000-4000-8000-000000000403",
     "meal_amount": 10.9,
     "meal_type": "Spoilt",
+    "payment_date": null,
+    "payment_status": "Pending",
     "shift": "Night",
+    "status": "Pending",
     "total_amount": 10.9,
     "user_id": "{{OWNER}}"
    },
@@ -370,6 +404,8 @@
     "meal_amount": 10.9,
     "meal_interrupted": "12:35",
     "meal_type": "Spoilt",
+    "payment_date": "2026-04-20T05:00:00Z",
+    "payment_status": "Paid",
     "rates_snapshot": {
      "kilometreRate": 1.5,
      "kmRate": 1.5,
@@ -378,6 +414,7 @@
     },
     "shift": "Day",
     "station_id": "{{STN_A}}",
+    "status": "Pending",
     "total_amount": 10.9,
     "user_id": "{{OWNER}}"
    },
@@ -397,6 +434,8 @@
     "id": "c2f00000-0000-4000-8000-000000000701",
     "meal_amount": 10.9,
     "meal_type": "Delayed",
+    "payment_date": "2026-05-02T14:10:00Z",
+    "payment_status": "Paid",
     "rates_snapshot": {
      "kilometreRate": 1.5,
      "kmRate": 1.5,
@@ -405,6 +444,7 @@
     },
     "shift": "Day",
     "station_id": "{{STN_A}}",
+    "status": "Pending",
     "total_amount": 10.9,
     "user_id": "{{OWNER}}"
    },
@@ -419,6 +459,8 @@
     "id": "c2f00000-0000-4000-8000-000000000801",
     "meal_amount": 10.9,
     "meal_type": "Spoilt / Meal",
+    "payment_date": "2026-06-01T00:00:00Z",
+    "payment_status": "Paid",
     "rates_snapshot": {
      "kilometreRate": 1.5,
      "kmRate": 1.5,
@@ -427,6 +469,7 @@
     },
     "shift": "Night",
     "station_id": "{{STN_A}}",
+    "status": "Pending",
     "total_amount": 10.9,
     "user_id": "{{OWNER}}"
    }
@@ -451,6 +494,8 @@
     "id": "c2f00000-0000-4000-8000-000000000401",
     "matrix_hours": 0.5,
     "night_mealie": 0,
+    "payment_date": null,
+    "payment_status": null,
     "rates_snapshot": {
      "kilometreRate": 1.5,
      "kmRate": 1.5,
@@ -461,6 +506,7 @@
     "shift": "Night",
     "standby_stn_id": "{{STN_B}}",
     "standby_type": "Standby",
+    "status": "Pending",
     "total_amount": 0,
     "travel_amount": 0,
     "user_id": "{{OWNER}}"
@@ -479,8 +525,12 @@
     "financial_year_id": "{{FY2026}}",
     "id": "c2f00000-0000-4000-8000-000000000402",
     "night_mealie": 0,
+    "payment_date": "2026-04-01T02:00:00Z",
+    "payment_status": "Paid",
+    "payslip_pay_nbr": "PN-0051",
     "shift": "Night",
     "standby_type": "Standby",
+    "status": "Pending",
     "total_amount": 45,
     "travel_amount": 45,
     "user_id": "{{OWNER}}"
@@ -505,6 +555,8 @@
     "financial_year_id": "{{FY2026}}",
     "id": "c2f00000-0000-4000-8000-000000000501",
     "night_mealie": 0,
+    "payment_date": null,
+    "payment_status": null,
     "rates_snapshot": {
      "kilometreRate": 1.5,
      "kmRate": 1.5,
@@ -515,6 +567,7 @@
     "shift": "Day",
     "standby_stn_id": "{{STN_B}}",
     "standby_type": "M&D",
+    "status": "Pending",
     "total_amount": 0,
     "travel_amount": 0,
     "user_id": "{{OWNER}}"
@@ -537,8 +590,11 @@
     "financial_year_id": "{{FY2026}}",
     "id": "c2f00000-0000-4000-8000-000000000502",
     "night_mealie": 0,
+    "payment_date": null,
+    "payment_status": null,
     "shift": "Day",
     "standby_type": "M&D",
+    "status": "Pending",
     "total_amount": 22.5,
     "travel_amount": 22.5,
     "user_id": "{{OWNER}}"

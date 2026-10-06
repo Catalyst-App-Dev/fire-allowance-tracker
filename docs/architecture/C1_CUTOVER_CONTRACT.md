@@ -109,7 +109,7 @@ canonical payment model; C1 only makes that representable and idempotent:
 | Prototype fact | Canonical destination |
 |---|---|
 | route (payslip / petty cash) | `claim_entitlements.payment_method` |
-| `Paid` + `payment_date` (+ `pay_number`) | `payment_records` row with `source = 'prototype_migration'`, `record_date`, `reference`, `gross_amount`, `raw_payload`, `migration_batch_id`, `migration_source_key` |
+| `Paid` + `payment_date` (+ `payslip_pay_nbr`; C3 found claim-row `pay_number` is not payment evidence) | `payment_records` row with `source = 'prototype_migration'`, `record_date`, `reference`, `gross_amount`, `raw_payload`, `migration_batch_id`, `migration_source_key` |
 | allocation | `entitlement_payment_links` (`link_entitlement_payment` checks owner, stream and over-allocation and writes the audit) |
 | status | `claim_entitlements.payment_status`, derived by the existing recompute |
 | who/why | `reconciliation_audit` |

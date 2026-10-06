@@ -52,8 +52,8 @@ test('every prototype type maps to exactly one canonical claim + one correct det
   assert.equal(p.claims.length, 8)
   const details = Object.fromEntries(Object.entries(p.details).map(([t, r]) => [t, r.length]))
   assert.deepEqual(details, { recall_details: 1, retain_details: 2, standby_details: 1, muster_dismiss_details: 1, spoilt_meal_details: 2, delayed_meal_details: 1 })
-  for (const g of ['1', '2', '3', '4', '5', '7']) assert.equal(report.gates[g].status, 'pass', `gate ${g}`)
-  for (const g of ['6', '8', '9']) assert.equal(report.gates[g].status, 'not_evaluated')
+  for (const g of ['1', '2', '3', '4', '5', '6', '7']) assert.equal(report.gates[g].status, 'pass', `gate ${g}`)
+  for (const g of ['8', '9']) assert.equal(report.gates[g].status, 'not_evaluated')
 })
 
 test('claim number and financial year are preserved exactly; status submitted', () => {
@@ -119,7 +119,7 @@ test('provenance and lineage: deterministic ids, batch-independent identity, a l
   for (const e of p.entitlements) {
     assert.ok(e.prototype_source && e.prototype_row_id && e.prototype_component)
     assert.equal(e.rule_id, 'prototype.preserved.v1')
-    assert.equal(e.payment_status, null) // C3 owns payment state
+    assert.ok(['pending', 'outstanding', 'paid', 'claimed'].includes(e.payment_status)) // C3 (WORK-191) derives it
     assert.equal(e.rate_snapshot.kind, 'prototype_preserved')
   }
   const leg = p.ledger.find((l) => l.source_table === 'recalls' && l.disposition === 'claim')
@@ -336,7 +336,10 @@ test('checkVerify accepts a clean verify and names every failing check', () => {
     batch: { status: 'completed', outcome: 'pass' }, gate5_totals: { dollars_source: 1, dollars_target: 1, hours_source: 2, hours_target: 2 },
     gate2_number_or_fy_mismatch: 0, gate2_scope_duplicates: 0, gate3_bad_detail: 0, gate3_parents_without_claim: 0, gate4_child_violations: 0,
     gate5_missing_source_rows: 0, gate5_value_mismatches: 0, gate5_adjustment_mismatches: 0, gate7_cross_owner_entitlements: 0, gate7_cross_owner_fy: 0,
-    gate7_ledger_orphan_or_cross_owner: 0, gate7_orphan_details: 0, gate7_payment_links_on_lineage: 0, gate7_rls_disabled: 0, gate7_api_privileges_on_migration_tables: 0,
+    gate7_ledger_orphan_or_cross_owner: 0, gate7_orphan_details: 0, gate7_payment_links_cross_owner_or_stream: 0, gate7_rls_disabled: 0, gate7_api_privileges_on_migration_tables: 0,
+    gate6_source_invalid: 0, gate6_paid_without_exactly_one_migration_link: 0, gate6_unpaid_with_links: 0, gate6_allocation_mismatches: 0,
+    gate6_record_date_mismatches: 0, gate6_status_mismatches: 0, gate6_audit_mismatches: 0, gate6_unlinked_migration_records: 0, gate6_duplicate_source_keys: 0,
+    gate6_totals: { source_paid_entitlements: 1, source_paid_amount: 5, migration_records: 1, links_on_lineage: 1, allocated_amount: 5 },
   }
   assert.equal(checkVerify(report, clean).ok, true)
   const bad = checkVerify(report, { ...clean, gate5_value_mismatches: 2, gate7_rls_disabled: 1 })
