@@ -1,0 +1,54 @@
+{
+ "label": "apply1.json",
+ "submitted_at": "2026-10-06T07:06:47.020Z",
+ "note": "first apply; see README honesty note",
+ "apply_result": {
+  "claims": {
+   "planned": 3,
+   "inserted": 3,
+   "verified_existing": 0
+  },
+  "ledger": {
+   "planned": 14,
+   "inserted": 14,
+   "verified_existing": 0
+  },
+  "details": {
+   "planned": 3,
+   "inserted": 3,
+   "verified_existing": 0
+  },
+  "batch_id": "6a21fbbb-bbb1-4375-93a4-1ddf845e16af",
+  "batch_key": "c2:dev:2.0.0:c7dd894ad0445e4a573d746a4a65e5de",
+  "change_id": "fat-c2-dev-c7dd894ad0445e4a573d746a",
+  "identities": {
+   "planned": 2,
+   "inserted": 2,
+   "verified_existing": 0
+  },
+  "plan_sha256": "799e83aade84ebd36277e877fd19b607c47153953f7a5b438c17a7c46ae986ca",
+  "entitlements": {
+   "planned": 5,
+   "inserted": 5,
+   "verified_existing": 0,
+   "adjustments_applied": 1
+  },
+  "payment_links": {
+   "linked": 4,
+   "planned": 4,
+   "verified_existing": 0
+  },
+  "batch_inserted": 1,
+  "financial_years": {
+   "planned": 1,
+   "inserted": 1,
+   "verified_existing": 0
+  },
+  "payment_records": {
+   "planned": 4,
+   "inserted": 4,
+   "verified_existing": 0
+  },
+  "data_load_inserted": 1
+ }
+}

@@ -1,0 +1,30 @@
+{
+  "decision": "refuse",
+  "role": "prod",
+  "requiresClearance": true,
+  "binding": {
+    "app": "fire-allowance-tracker",
+    "provider": "neon",
+    "project": "cool-meadow-70196410",
+    "target": "main",
+    "targetId": "br-red-credit-a77927m4",
+    "role": "prod",
+    "backend": "owned",
+    "operation": "data-load",
+    "change": "fat-c2-dev-c7dd894ad0445e4a573d746a"
+  },
+  "reasons": [
+    {
+      "code": "dev-not-verified",
+      "detail": "no verified evidence that change \"fat-c2-dev-c7dd894ad0445e4a573d746a\" is applied on the dev target first; DEV precedes PROD"
+    },
+    {
+      "code": "no-rollback",
+      "detail": "a PROD data-load needs a named rollback or restore path { kind, ref }"
+    },
+    {
+      "code": "clearance-required",
+      "detail": "PROD data-load needs explicit Production clearance for exactly this operation; capability is not authorization"
+    }
+  ]
+}

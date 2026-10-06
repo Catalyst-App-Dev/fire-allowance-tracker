@@ -126,5 +126,6 @@ from Supabase DEV or PROD.
   `data.application-backend` rules 9–10: verified DEV evidence for the same change, a named
   rollback, and explicit Production clearance bound to that exact operation.
 - **F2 — N3:** cross-database C2/C3 transform (Supabase prototype → Neon canonical),
-  `EMPTY_CLAIM_GROUP`, DEV rehearsal. **F3 — N2:** server-side data access, Neon Auth, storage on
+  `EMPTY_CLAIM_GROUP`, DEV rehearsal — **delivered and DEV-proven by WORK-255** (tool 2.0.0,
+  `C2_TRANSFORM_CONTRACT.md` § 11, evidence `docs/evidence/WORK-255/`; `main` untouched). **F3 — N2:** server-side data access, Neon Auth, storage on
   DEV. WORK-192 (C4) Production preparation depends on both.

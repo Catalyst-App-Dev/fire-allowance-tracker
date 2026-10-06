@@ -1,0 +1,1 @@
+[{"snapshot":{"schema":"fat.c2.source-snapshot/v2","tables":{"retain":[],"recalls":[],"standby":[],"claim_groups":[],"spoilt_meals":[],"claim_sequences":[],"financial_years":[]},"provider":"supabase","reference":{"profiles":[],"stations":[],"member_classifications":[]}}}]

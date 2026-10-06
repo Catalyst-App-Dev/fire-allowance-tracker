@@ -1,0 +1,1 @@
+{"found": true, "batch_key": "c2:dev:2.0.0:b08784351cab1432786bcebf28e2ab2f", "audit_cascaded": 4, "claims_deleted": 3, "links_cascaded": 4, "rollback_change": "fat-c2-dev-b08784351cab1432786bcebf-rollback", "data_load_removed": 1, "overrides_cascaded": 1, "payment_records_deleted": 4, "untargeted_ledger_deleted": 3, "entitlements_deleted_directly": 5}

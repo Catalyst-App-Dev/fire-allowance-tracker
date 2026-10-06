@@ -51,3 +51,14 @@ Merging is not applying. Each apply is a separate, deliberate act on one declare
   rows, grants or settings behind.
 - `verify/fat_catalog_fingerprint.sql`: compare against a fresh empty-database replay (identical)
   and against Supabase DEV (differences limited to NEON_BACKEND.md §4).
+
+## C2/C3 transform-copy (WORK-255)
+
+The cross-database C2/C3 tool (`scripts/c2-transform.mjs`, tool 2.0.0) writes its batches to a
+Neon target as **data loads** keyed by the plan's change id (`fat-c2-<env>-<fp24>`): preflight
+`data-load` with that id, run `apply.sql` (one transaction; its transport and stale guards refuse
+anything but the reviewed plan against the reference it was planned on), then `verify-applied`
+against `fat_migrations.data_loads`. `verify.sql` runs as `data-write` (read-only apart from a
+rolled-back RLS probe). `rollback.sql` removes only that batch and records
+`<change id>-rollback`. Procedure and evidence: `docs/architecture/C2_TRANSFORM_CONTRACT.md` § 11,
+`docs/evidence/WORK-255/`.
